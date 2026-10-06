@@ -372,7 +372,7 @@ function step(dt, now){
   const squeeze = S.hug*(0.88 + 0.12*breath);
 
   // 腕：0.0=上にあげる / 0.45=ふだんの位置 / 1.0=前で閉じる
-  const armBase = 0.45 + squeeze*0.55 + lonely*0.12 - found*0.08
+  const armBase = 0.45 + squeeze*0.55 + lonely*0.45 - found*0.10
                 - S.raise*P.raiseAmt - S.startle*0.06;
   const swing = S.wave*P.waveAmp*Math.sin(S.wavePhase);   // 左右で逆になる上下
   // お腹：呼吸そのもの
@@ -554,7 +554,8 @@ function draw(now){
   ctx.restore();
 
   // 目：起きている＝真円 / 背すじが下がっている＝横棒
-  const closing = dSpine < -0.0004;
+  const lonely = Math.max(0,-S.found);
+  const closing = dSpine < -0.0004 || lonely > 0.45;   // 背すじが下がる間 or こどく
   const eye=cssVar("--eye");
   const eyeR=faceH*0.30*0.7;
   ctx.save();
