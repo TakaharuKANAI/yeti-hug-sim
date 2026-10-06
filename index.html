@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root{color-scheme:light}
+  body{margin:0;font:14px system-ui,sans-serif}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+</style>
+<title>体験フローシミュレータ</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Roboto+Mono:wght@400;500&display=swap">
+<style>
+/* レイアウト: 左に生きもの、右に入力ときもちと出力。狭い画面では1列に積む */
+:root{
+  --bg:#faf7f2; --panel:#fffdfa; --line:#e2d9cc; --fg:#332d26; --muted:#857a6d;
+  --fur:#eceae6; --fur-sh:#dcd9d3; --ink:#5a6068; --cream:#dcdbd6; --hand:#b9bcc0;
+  --stage:#8fa3ad; --face:#2a3038; --eye:#4bd8e8;
+  --accent:#d1694a; --found:#e8a33d; --ease:#4fa88a; --spark:#d9568f;
+  --display:"Zen Maru Gothic",system-ui,sans-serif;
+  --mono:"Roboto Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1b1815; --panel:#262019; --line:#3d352c; --fg:#f2e9de; --muted:#a4978a;
+  --fur:#e3e1dc; --fur-sh:#cfccc6; --ink:#4a5058; --cream:#cfccc6; --hand:#8d9298;
+  --stage:#5d7079; --face:#20262c; --eye:#4bd8e8;
+  --accent:#ef8a63; --found:#ffc05c; --ease:#5fd0a8; --spark:#ff79ab;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#1b1815; --panel:#262019; --line:#3d352c; --fg:#f2e9de; --muted:#a4978a;
+  --fur:#e3e1dc; --fur-sh:#cfccc6; --ink:#4a5058; --cream:#cfccc6; --hand:#8d9298;
+  --stage:#5d7079; --face:#20262c; --eye:#4bd8e8;
+  --accent:#ef8a63; --found:#ffc05c; --ease:#5fd0a8; --spark:#ff79ab;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--display)}
+.wrap{max-width:1060px;margin:0 auto;padding-block:20px 34px;padding-left:16px;padding-right:16px}
+h1{font-size:23px;margin:0 0 16px;text-wrap:balance}
+.sub{color:var(--muted);font-size:13px;line-height:1.7;margin:0 0 18px;max-width:62ch}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,330px);gap:16px;align-items:start}
+@media (max-width:780px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px}
+.card + .card{margin-top:14px}
+.card h2{font-size:12px;letter-spacing:.1em;color:var(--muted);font-weight:500;margin:0 0 11px}
+canvas{display:block;width:100%;height:auto;max-width:100%;border-radius:10px}
+.stagebox{position:relative}
+.touchrow{display:flex;gap:2.5%;justify-content:center;margin-top:12px}
+.touch{position:relative;flex:1 1 0;min-width:0;max-width:96px;aspect-ratio:1;border-radius:50%;
+  border:2px solid var(--line);background:var(--bg);color:var(--fg);font-family:var(--display);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  cursor:pointer;touch-action:none;user-select:none;overflow:hidden;padding:0;line-height:1.25}
+.touch b{font-size:clamp(9px,1.9vw,13px);font-weight:700}
+.touch .sm{font-size:clamp(7px,1.5vw,11px);color:var(--muted)}
+.touch .lv{font-family:var(--mono);font-size:clamp(7px,1.4vw,10px);color:var(--muted)}
+
+.touch[data-on="1"]{border-color:var(--accent)}
+.touch[data-dim="1"]{opacity:.32;filter:grayscale(1);cursor:not-allowed}
+.touch .fill{position:absolute;left:0;bottom:0;width:100%;background:var(--accent);opacity:.16}
+.keys{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.key{flex:1 1 86px;min-width:0;border:2px solid var(--line);border-radius:12px;background:var(--bg);color:var(--fg);
+  font-family:var(--display);font-size:13px;padding:10px 6px;cursor:pointer;touch-action:none;user-select:none;
+  position:relative;overflow:hidden;transition:border-color .1s}
+.key[data-on="1"]{border-color:var(--accent)}
+.key small{display:block;font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px}
+.key .fill{position:absolute;left:0;bottom:0;width:100%;background:var(--accent);opacity:.15}
+.meter{margin-bottom:13px}
+.meter .ends{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px}
+.meter .track{position:relative;height:12px;border-radius:6px;background:color-mix(in srgb,var(--fg) 9%,transparent)}
+.meter .track::before{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--line)}
+.meter .dot{position:absolute;top:-3px;width:18px;height:18px;border-radius:50%;margin-left:-9px}
+.out{display:grid;grid-template-columns:76px 1fr 50px;gap:9px;align-items:center;font-size:12px;margin-bottom:8px}
+.bar{height:11px;border-radius:6px;background:color-mix(in srgb,var(--fg) 9%,transparent);overflow:hidden;min-width:0}
+.bar i{display:block;height:100%;width:0;border-radius:6px;background:var(--accent)}
+.num{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.hint{font-size:12px;color:var(--muted);line-height:1.8;margin:10px 0 0}
+.dist{font-size:13px;color:var(--fg);margin:12px 0 0;font-family:var(--mono)}
+.dist b{font-size:17px;font-weight:500;font-variant-numeric:tabular-nums}
+label.slider{display:block;font-size:12px;margin-bottom:11px}
+label.slider .top{display:flex;justify-content:space-between;color:var(--muted);margin-bottom:3px}
+label.slider b{font-family:var(--mono);font-weight:500;color:var(--fg)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+button{font-family:var(--display);font-size:13px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);
+  background:var(--bg);color:var(--fg);cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button:focus-visible,.key:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+pre{font-family:var(--mono);font-size:11px;background:var(--bg);border:1px solid var(--line);border-radius:10px;
+  padding:10px;overflow-x:auto;margin:10px 0 0;line-height:1.65}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+</style>
+
+<div class="wrap">
+  <h1>体験フローシミュレータ</h1>
+
+  <div class="grid">
+    <div>
+      <div class="card">
+        <div class="stagebox">
+          <canvas id="stage" width="840" height="660" aria-label="生きもののうごき"></canvas>
+        </div>
+        <div class="touchrow">
+          <button class="touch" id="k0" data-on="0"><span class="fill"></span><b>タッチ1</b><span class="sm">（A）</span><span class="lv" id="v0">0.00</span></button>
+          <button class="touch" id="k1" data-on="0"><span class="fill"></span><b>タッチ2</b><span class="sm">（S）</span><span class="lv" id="v1">0.00</span></button>
+          <button class="touch" id="k2" data-on="0"><span class="fill"></span><b>タッチ3</b><span class="sm">（D）</span><span class="lv" id="v2">0.00</span></button>
+          <button class="touch" id="k3" data-on="0"><span class="fill"></span><b>タッチ4</b><span class="sm">（F）</span><span class="lv" id="v3">0.00</span></button>
+          <button class="touch" id="k4" data-on="0"><span class="fill"></span><b>タッチ5</b><span class="sm">（G）</span><span class="lv" id="v4">0.00</span></button>
+        </div>
+        <p class="dist">距離：<b id="vd">70</b> cm</p>
+        <p class="hint">
+          手が近くにあるときだけ触れます。手は<b>ドラッグ</b>か <b>&lt;</b> <b>&gt;</b>（← →）で動かします。<br>
+          タッチ1→5の順＝順なで／5→1の順＝逆なで／同じところを素早く2回以上＝びっくり／3つ以上同時に素早く3回以上＝すごくびっくり／2つ以上を長押し＝だきしめる
+        </p>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>ステータス</h2>
+        <div class="meter"><div class="ends"><span>こどく</span><span>はっけん</span></div>
+          <div class="track"><span class="dot" id="d_found" style="background:var(--found)"></span></div></div>
+        <div class="meter"><div class="ends"><span>けいかい</span><span>あんしん</span></div>
+          <div class="track"><span class="dot" id="d_ease" style="background:var(--ease)"></span></div></div>
+        <div class="meter"><div class="ends"><span>ねむけ</span><span>わくわく</span></div>
+          <div class="track"><span class="dot" id="d_spark" style="background:var(--spark)"></span></div></div>
+        <div class="out" style="margin-top:14px"><span>だっこ</span><span class="bar"><i id="b_hug"></i></span><span class="num" id="n_hug">0.00</span></div>
+      </div>
+
+      <div class="card">
+        <h2>サーボ</h2>
+        <div class="out"><span>右腕 開閉</span><span class="bar"><i id="b_a0"></i></span><span class="num" id="n_a0">—</span></div>
+        <div class="out"><span>左腕 開閉</span><span class="bar"><i id="b_a1"></i></span><span class="num" id="n_a1">—</span></div>
+        <div class="out"><span>おなか</span><span class="bar"><i id="b_a2" style="background:var(--ease)"></i></span><span class="num" id="n_a2">—</span></div>
+        <div class="out"><span>背すじ</span><span class="bar"><i id="b_a3" style="background:var(--ease)"></i></span><span class="num" id="n_a3">—</span></div>
+        <p class="hint">腕 130°（開く）〜5°（閉じる）、お腹と背筋 40°〜140°。実機の <span style="font-family:var(--mono)">ACT[]</span> と同じです。</p>
+      </div>
+
+      <div class="card">
+        <h2>パラメータ</h2>
+        <label class="slider"><span class="top">だっこと判定するまで<b><span id="o_hold">500</span> ms</b></span><input type="range" id="s_hold" min="100" max="2000" step="50" value="500"></label>
+        <label class="slider"><span class="top">締める速さ<b><span id="o_rise">2.2</span></b></span><input type="range" id="s_rise" min="0.5" max="6" step="0.1" value="2.2"></label>
+        <label class="slider"><span class="top">ほどく速さ<b><span id="o_fall">0.9</span></b></span><input type="range" id="s_fall" min="0.2" max="4" step="0.1" value="0.9"></label>
+        <label class="slider"><span class="top">サーボの最大速度<b><span id="o_speed">110</span> °/s</b></span><input type="range" id="s_speed" min="30" max="300" step="5" value="110"></label>
+        <label class="slider"><span class="top">触れたと見なす強さ<b><span id="o_thr">0.30</span></b></span><input type="range" id="s_thr" min="0.05" max="0.8" step="0.01" value="0.30"></label>
+        <label class="slider"><span class="top">近いと見なす距離<b><span id="o_near">50</span> cm</b></span><input type="range" id="s_near" min="10" max="70" step="1" value="50"></label>
+        <h2 style="margin-top:16px">リアクションの腕</h2>
+        <label class="slider"><span class="top">びっくりで上げる量<b><span id="o_raise">0.45</span></b></span><input type="range" id="s_raise" min="0" max="0.9" step="0.05" value="0.45"></label>
+        <label class="slider"><span class="top">上げた手が下りる速さ<b><span id="o_rdec">1.1</span></b></span><input type="range" id="s_rdec" min="0.2" max="4" step="0.1" value="1.1"></label>
+        <label class="slider"><span class="top">なでの振り幅<b><span id="o_wamp">0.30</span></b></span><input type="range" id="s_wamp" min="0" max="0.6" step="0.02" value="0.30"></label>
+        <label class="slider"><span class="top">なでの振る速さ<b><span id="o_whz">1.5</span> 往復/秒</b></span><input type="range" id="s_whz" min="0.3" max="4" step="0.1" value="1.5"></label>
+        <label class="slider"><span class="top">振りが収まる速さ<b><span id="o_wdec">0.8</span></b></span><input type="range" id="s_wdec" min="0.2" max="3" step="0.1" value="0.8"></label>
+        <div class="btns">
+          <button id="reset">きもちをリセット</button>
+          <button id="copy" class="primary">スケッチ用の値をコピー</button>
+        </div>
+        <pre id="code"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const clamp = (v,a,b)=> v<a?a:(v>b?b:v);
+const lerp = (a,b,t)=> a+(b-a)*t;
+
+// 実機の ACT[] と同じ（min = 指令値0.0 / max = 指令値1.0）
+const ACT = [
+  {name:"右腕 開閉", min:130, max:5},
+  {name:"左腕 開閉", min:130, max:5},
+  {name:"おなか",   min:40,  max:140},
+  {name:"背すじ",   min:40,  max:140},
+];
+const R_ARM=0, L_ARM=1, BELLY=2, SPINE=3;
+
+const P = {hold:500, rise:2.2, fall:0.9, speed:110, thr:0.30, near:600, press:0.80,
+           raiseAmt:0.45, raiseDecay:1.1, waveAmp:0.30, waveHz:1.5, waveDecay:0.8};
+const bindSlider = (sl,out,key,fmt)=>{
+  const el=$(sl), o=$(out);
+  const sync=()=>{P[key]=parseFloat(el.value); o.textContent=fmt(el.value); writeCode();};
+  el.addEventListener("input",sync); sync();
+};
+
+// --- 入力 ---------------------------------------------------------------
+const N_TOUCH=5;
+const T=Array.from({length:N_TOUCH},()=>({level:0,prev:0,on:false,prevOn:false,pressed:false,onSince:0,spike:false}));
+const KEYS=["a","s","d","f","g"];         // タッチ1〜5
+let distCm = 70;            // ToF の距離 cm（6=お腹の前 / 70=いちばん遠い）
+let hintUntil = performance.now()+7000;   // 起動直後だけ矢印の案内を出す
+let nearKey=0, farKey=0;    // < > の押下
+
+function setPressed(i,on){ T[i].pressed=on; $("k"+i).dataset.on=on?"1":"0"; }
+T.forEach((_,i)=>{
+  const k=$("k"+i);
+  k.addEventListener("pointerdown",e=>{k.setPointerCapture(e.pointerId);setPressed(i,true)});
+  ["pointerup","pointercancel","pointerleave"].forEach(ev=>k.addEventListener(ev,()=>setPressed(i,false)));
+});
+const isNearKey = e => e.key==="<" || e.key==="," || e.key==="ArrowLeft";
+const isFarKey  = e => e.key===">" || e.key==="." || e.key==="ArrowRight";
+addEventListener("keydown",e=>{
+  if(e.repeat) return;
+  const k=e.key.toLowerCase();
+  const i=KEYS.indexOf(k); if(i>=0) setPressed(i,true);
+  if(isNearKey(e)) nearKey=1;
+  if(isFarKey(e))  farKey=1;
+  if(isNearKey(e)||isFarKey(e)) hintUntil=0;      // 矢印の案内を消す
+});
+addEventListener("keyup",e=>{
+  const k=e.key.toLowerCase();
+  const i=KEYS.indexOf(k); if(i>=0) setPressed(i,false);
+  if(isNearKey(e)) nearKey=0;
+  if(isFarKey(e))  farKey=0;
+});
+
+// --- きもち（両極の3軸。-1 と +1 が両端） --------------------------------
+let S={}, angles=[];
+function resetState(){
+  S={ found:-0.4,      // -1 こどく   / +1 はっけん
+      ease:0.1,        // -1 けいかい / +1 あんしん
+      spark:0.0,       // -1 ねむけ   / +1 わくわく
+      hug:0, sway:0, shiver:0, startle:0, breath:0, raise:0, wave:0, wavePhase:0,
+      lastTouch:performance.now(), taps:[], simTaps:[], simPrev:0, simPending:0,
+      gestureLock:0, gesture:"", gestureUntil:0 };
+  angles = ACT.map(a=>(a.min+a.max)/2);
+  distCm = 70;
+}
+resetState();
+$("reset").addEventListener("click",resetState);
+const showGesture = n => { S.gesture=n; S.gestureUntil=performance.now()+1600; };
+
+function step(dt, now){
+  // 距離（< で近づく / > で離れる）
+  distCm = clamp(distCm + (farKey-nearKey)*55*dt, 6, 70);
+  // しきい値より近いと反応。6cm（お腹の前）で 1.0
+  const presence = distCm <= P.near ? clamp((P.near - distCm)/(P.near - 6), 0, 1) : 0;
+
+  // 電極（実機と同じフィルタ 0.6/0.4）。手が近くにないと触れない
+  const reachable = distCm <= P.near;
+  let onCount=0, sum=0;
+  T.forEach(t=>{
+    const raw = (t.pressed && reachable) ? P.press : 0;
+    t.prev=t.level; t.prevOn=t.on;
+    t.level = t.level*0.6 + raw*0.4;
+    t.on = t.level >= P.thr;
+    t.spike = (t.level - t.prev) > 0.20;
+    if(t.on && !t.prevOn) t.onSince = now;
+    if(!t.on) t.onSince = 0;
+    if(t.on){ onCount++; sum += t.level; }
+  });
+  const avg = onCount ? sum/onCount : 0;
+  if(onCount>0) S.lastTouch = now;
+
+  // 押した瞬間を記録。前の押しから 800ms 以上あいていたら、ひと続きの操作ではないので捨てる
+  T.forEach((t,i)=>{
+    if(t.on && !t.prevOn){
+      if(S.taps.length && now - S.taps[S.taps.length-1].ms > 800) S.taps=[];
+      S.taps.push({i, ms:now});
+    }
+  });
+  S.taps = S.taps.filter(e => now-e.ms < 2500);
+
+  // 3つ以上の同時タップ：押し始めが 150ms 以内にそろっていて、500ms 以内に全部離すこと。
+  //  順になでただけ、押さえたままなだけでは数えない。
+  if(onCount>=3 && S.simPrev<3){
+    const onsets=T.map(t=>t.onSince).filter(v=>v>0);
+    const spread=Math.max(...onsets)-Math.min(...onsets);
+    S.simPending = (spread<=150) ? now : 0;
+  }
+  if(S.simPending && onCount===0){
+    if(now - S.simPending < 500) S.simTaps.push(now);
+    S.simPending = 0;
+  }
+  if(S.simPending && now - S.simPending > 500) S.simPending = 0;   // 長押しは別物
+  S.simPrev = onCount;
+  S.simTaps = S.simTaps.filter(ms => now-ms < 1500);
+
+  // すごくびっくり：3つ以上の同時タップが 1.5 秒のうちに3回以上
+  if(S.simTaps.length>=3 && now > S.gestureLock){
+    S.startle=1.4; S.ease=clamp(S.ease-1.0,-1,1); S.spark=clamp(S.spark+0.5,-1,1);
+    S.raise=1;                                   // 両手を上げる
+    showGesture("すごく びっくり"); S.gestureLock=now+900; S.simTaps=[]; S.taps=[];
+  }
+
+  // なで：1→2→3（順）か 3→2→1（逆）に、間をあけずに順番どおり反応したとき
+  const seq=[];
+  S.taps.filter(e=>now-e.ms<1600).forEach(e=>{
+    if(!seq.length || seq[seq.length-1].i!==e.i) seq.push(e);
+  });
+  if(seq.length>=2 && now > S.gestureLock){
+    const a=seq[0], b=seq[seq.length-1], span=b.ms-a.ms;
+    const dir = b.i>a.i ? 1 : -1;
+    let ok = a.i!==b.i;
+    for(let k=1;k<seq.length;k++){
+      const d = seq[k].i - seq[k-1].i;
+      const gap = seq[k].ms - seq[k-1].ms;
+      if(d*dir <= 0) ok=false;            // 向きが一定であること
+      if(Math.abs(d)>2) ok=false;         // 隣（1つ飛ばしまで）を順に通ること
+      if(gap < 60 || gap > 700) ok=false; // 同時押しでも、間があきすぎでもない
+    }
+    // 逆なでは誤判定しやすいので、3段以上たどったときだけ
+    if(ok && dir<0 && seq.length<3) ok=false;
+    if(ok){
+      const sp = clamp(900/Math.max(span,120), 0.2, 2.0);
+      S.sway = clamp(S.sway + dir*0.6*sp, -1, 1);
+      S.wave=1; S.wavePhase=0;                   // 両手を交互に上下させる
+      if(dir>0){ S.spark=clamp(S.spark+0.22*sp,-1,1); S.ease=clamp(S.ease+0.14,-1,1);
+                 showGesture("なでられた"); }
+      else     { S.ease=clamp(S.ease-0.35,-1,1); S.shiver=1; showGesture("さかなで…"); }
+      S.gestureLock=now+450; S.taps=[]; S.simTaps=[];
+    }
+  }
+
+  // びっくり：同じところだけを素早く2回以上タップ
+  for(let i=0;i<N_TOUCH && now>S.gestureLock;i++){
+    const mine = S.taps.filter(e=>e.i===i && now-e.ms<700);
+    const others = S.taps.filter(e=>e.i!==i && now-e.ms<700);
+    if(mine.length>=2 && others.length===0){
+      S.startle=1; S.ease=clamp(S.ease-0.6,-1,1); S.spark=clamp(S.spark+0.3,-1,1);
+      showGesture("びっくり"); S.gestureLock=now+600; S.taps=[];
+    }
+  }
+
+  // だきしめる：3つのうち2つ以上を長押し
+  let hugging=false;
+  if(onCount>=2){
+    let since=0; T.forEach(t=>{ if(t.on && (since===0||t.onSince<since)) since=t.onSince; });
+    hugging = since!==0 && (now-since > P.hold);
+  }
+  const hugTarget = hugging ? clamp((avg-0.25)/0.45, 0.25, 1) : 0;
+  S.hug += (hugTarget-S.hug) * clamp(dt*(hugTarget>S.hug?P.rise:P.fall),0,1);
+  if(hugging){
+    S.ease  = clamp(S.ease + dt*0.7, -1, 1);
+    S.found = clamp(S.found + dt*0.8, -1, 1);
+    S.shiver = 0;
+    if(S.hug>0.35) showGesture("ぎゅっ");
+  }
+  // そっと触られている
+  if(onCount===1 && avg<0.6 && !hugging) S.ease = clamp(S.ease + dt*0.3, -1, 1);
+
+  // こどく↔はっけん：そばに人がいると発見へ、いないと孤独へ
+  const foundTarget = presence>0.05 ? lerp(0.1, 1, presence) : -1;
+  S.found += (foundTarget - S.found) * clamp(dt*(foundTarget>S.found?0.9:0.12),0,1);
+
+  // けいかい↔あんしん：放っておくとゆっくり真ん中へ
+  S.ease -= S.ease*dt*0.05;
+
+  // ねむけ↔わくわく：触れられず、人もいないと眠くなる
+  const idle = (now - S.lastTouch)/1000;
+  if(idle>20 && presence<0.15) S.spark = clamp(S.spark - dt*0.12, -1, 1);
+  else if(presence>0.3)        S.spark = clamp(S.spark + dt*0.10*presence, -1, 1);
+  else                         S.spark -= S.spark*dt*0.05;
+
+  S.raise   *= (1-clamp(dt*P.raiseDecay,0,1));   // 上げた手が下りる速さ
+  S.wave    *= (1-clamp(dt*P.waveDecay,0,1));    // 交互の上下が収まる速さ
+  S.wavePhase += dt*Math.PI*2*P.waveHz;          // 振る速さ
+  S.sway    *= (1-clamp(dt*1.2,0,1));
+  S.shiver  *= (1-clamp(dt*1.5,0,1));
+  S.startle *= (1-clamp(dt*2.5,0,1));
+
+  // 呼吸：わくわくで速く、眠いと遅く、抱かれると深くゆっくり
+  const period = 4.4 - Math.max(0,S.spark)*1.4 + Math.max(0,-S.spark)*2.2 + S.hug*1.8;
+  S.breath += dt/period*Math.PI*2;
+  if(S.breath>Math.PI*2) S.breath -= Math.PI*2;
+  const breath = Math.sin(S.breath), breathSlow = Math.sin(S.breath-0.5);
+
+  // --- 出力 ---
+  const lonely = Math.max(0,-S.found), found = Math.max(0,S.found);
+  const alertness = Math.max(0,-S.ease), sleepy = Math.max(0,-S.spark);
+  const tremor = S.shiver*0.05*Math.sin(now*0.05);
+  const squeeze = S.hug*(0.88 + 0.12*breath);
+
+  // 腕：0.0=上にあげる / 0.45=ふだんの位置 / 1.0=前で閉じる
+  const armBase = 0.45 + squeeze*0.55 + lonely*0.12 - found*0.08
+                - S.raise*P.raiseAmt - S.startle*0.06;
+  const swing = S.wave*P.waveAmp*Math.sin(S.wavePhase);   // 左右で逆になる上下
+  // お腹：呼吸そのもの
+  const bellyAmp = 0.22 + Math.max(0,S.spark)*0.10 + S.hug*0.20 - sleepy*0.08;
+  const belly = 0.42 + S.hug*0.10 + breath*bellyAmp;
+  // 背筋：わくわく・はっけんで伸び、眠い・こどくで縮む。だっこで少し丸まる
+  const spine = 0.48 + S.spark*0.26 + found*0.16 - lonely*0.12 - S.hug*0.20
+              + S.startle*0.32 + alertness*0.10 + breathSlow*0.05;
+
+  const cmd = [
+    armBase - swing + S.sway*0.06 + tremor,
+    armBase + swing - S.sway*0.06 + tremor,
+    belly + tremor,
+    spine + S.sway*0.10 + tremor,
+  ].map(v=>clamp(v,0,1));
+
+  cmd.forEach((n,i)=>{
+    const target = ACT[i].min + n*(ACT[i].max-ACT[i].min);
+    angles[i] += clamp(target-angles[i], -P.speed*dt, P.speed*dt);
+  });
+}
+
+const norm = i => clamp((angles[i]-ACT[i].min)/(ACT[i].max-ACT[i].min), 0, 1);
+
+// --- 絵 -----------------------------------------------------------------
+const cv=$("stage"), ctx=cv.getContext("2d");
+const handGeom={near:0, far:1, y:0};
+
+// キャンバスをドラッグすると手が動く
+let dragging=false;
+const dragTo = e => {
+  const r=cv.getBoundingClientRect();
+  const x=e.clientX-r.left;
+  const t=clamp((x-handGeom.near)/(handGeom.far-handGeom.near), 0, 1);
+  distCm = 6 + t*(70-6);
+  hintUntil = 0;
+};
+cv.addEventListener("pointerdown",e=>{ dragging=true; cv.setPointerCapture(e.pointerId); dragTo(e); });
+cv.addEventListener("pointermove",e=>{ if(dragging) dragTo(e); });
+["pointerup","pointercancel"].forEach(ev=>cv.addEventListener(ev,()=>dragging=false));
+cv.style.cursor="ew-resize";
+cv.style.touchAction="none";
+function fitCanvas(){
+  const dpr=Math.min(devicePixelRatio||1,2);
+  const w=cv.clientWidth||420, h=w*0.78;
+  cv.width=w*dpr; cv.height=h*dpr; cv.style.height=h+"px";
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {w,h};
+}
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+// もこもこの輪郭
+const furSeed = Array.from({length:97},()=>0.6+Math.random()*0.8);
+
+// 卵型のからだ（背すじが縮むと、つぶれて饅頭になる）
+//  θ=0 が上。上が細く下が広い卵。毛は細かいとげとげ。
+function eggPath(cx, cy, rx, ry, bel, amp, groundY){
+  const N=220, pt=[];
+  for(let i=0;i<N;i++){
+    const th=i/N*Math.PI*2;
+    const sin=Math.sin(th), cos=Math.cos(th);
+    const widen = 1 + bel*0.26*Math.max(0,-cos);      // お腹がふくらむと下半分が張る
+    let x = rx*sin*(1-0.20*cos)*widen;
+    let y = -ry*cos;
+    // 外向きの法線
+    let nx=x/(rx*rx), ny=y/(ry*ry);
+    const L=Math.hypot(nx,ny)||1; nx/=L; ny/=L;
+    const spike = amp*(i%2===0 ? 1 : 0.18)*furSeed[i%furSeed.length];
+    let px=cx+x+nx*spike, py=cy+y+ny*spike;
+    if(groundY!==undefined) py=Math.min(py, groundY);
+    pt.push({x:px, y:py});
+  }
+  traceSharp(pt);
+}
+
+// 点列をそのまま直線でつなぐ（毛先がとがる）
+function traceSharp(pt){
+  ctx.beginPath();
+  ctx.moveTo(pt[0].x, pt[0].y);
+  for(let i=1;i<pt.length;i++) ctx.lineTo(pt[i].x, pt[i].y);
+  ctx.closePath();
+}
+
+// 点列を中点でつないだ閉曲線にする（ギザギザが出ない）
+function traceSmooth(pt){
+  const N=pt.length, mid=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+  ctx.beginPath();
+  const m0=mid(pt[N-1],pt[0]);
+  ctx.moveTo(m0.x,m0.y);
+  for(let i=0;i<N;i++){ const p=pt[i], m=mid(p,pt[(i+1)%N]); ctx.quadraticCurveTo(p.x,p.y,m.x,m.y); }
+  ctx.closePath();
+}
+
+// 単体のもこもこ楕円（お腹の面などに使う）
+function furPath(cx,cy,rx,ry,bumps,amp){
+  const N=120, pt=[];
+  for(let i=0;i<N;i++){
+    const a=i/N*Math.PI*2 - Math.PI/2;
+    const bump=amp*(i%2===0?1:0.18)*furSeed[i%furSeed.length];
+    pt.push({x:cx+Math.cos(a)*(rx+bump), y:cy+Math.sin(a)*(ry+bump*0.8)});
+  }
+  traceSharp(pt);
+}
+
+// もこもこの腕：付け根は細く、先に行くほど太い
+function furLimbShape(pts, radBase, radTip, amp){
+  const left=[], right=[];
+  for(let i=0;i<pts.length;i++){
+    const p=pts[i];
+    const a=pts[Math.max(i-1,0)], b=pts[Math.min(i+1,pts.length-1)];
+    let tx=b.x-a.x, ty=b.y-a.y; const L=Math.hypot(tx,ty)||1; tx/=L; ty/=L;
+    const nx=-ty, ny=tx;
+    const t=i/(pts.length-1);
+    const r = radBase + (radTip-radBase)*Math.pow(t,0.75);   // 先に行くほど太く
+    const b1=amp*(i%2===0?1:0.15)*furSeed[i%furSeed.length]*1.5;
+    const b2=amp*(i%2===1?1:0.15)*furSeed[(i+9)%furSeed.length]*1.5;
+    left.push({x:p.x+nx*(r+b1), y:p.y+ny*(r+b1)});
+    right.push({x:p.x-nx*(r+b2), y:p.y-ny*(r+b2)});
+  }
+  const tip=pts[pts.length-1], prev=pts[pts.length-2];
+  let tx=tip.x-prev.x, ty=tip.y-prev.y; const L=Math.hypot(tx,ty)||1;
+  return {left, right, end:tip, dir:Math.atan2(ty/L, tx/L), rad:radTip};
+}
+function smoothThrough(list, moveTo){
+  const mid=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+  if(moveTo) ctx.moveTo(list[0].x,list[0].y); else ctx.lineTo(list[0].x,list[0].y);
+  for(let i=1;i<list.length-1;i++){ const m=mid(list[i],list[i+1]); ctx.quadraticCurveTo(list[i].x,list[i].y,m.x,m.y); }
+  const last=list[list.length-1]; ctx.lineTo(last.x,last.y);
+}
+
+let prevSpine = 0.5;
+
+function draw(now){
+  const {w,h}=fitCanvas();
+  const fur=cssVar("--fur"), cream=cssVar("--cream"), ink=cssVar("--ink");
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle=cssVar("--stage"); ctx.fillRect(0,0,w,h);
+
+  const aR=norm(R_ARM), aL=norm(L_ARM), bel=norm(BELLY), spi=norm(SPINE);
+  const dSpine = spi - prevSpine; prevSpine = spi;      // 背すじが下がっているか
+  const s=w/420;
+  const cx=w/2;
+
+  // からだ：背すじが伸びると縦長の卵、縮むと饅頭
+  const bodyH=(78+spi*120)*s, bodyW=(94-spi*22+bel*12)*s;
+  const ground=h*0.5 + (bodyH*0.5 + 22*s)*0.62;
+  const cyBody=ground-bodyH*0.50;
+  const headR=bodyW*0.52;                        // 顔まわりの基準
+  const headY=cyBody-bodyH*0.30;                 // 顔の高さ
+
+  ctx.lineJoin="round"; ctx.lineCap="round";
+
+  // 足（からだの下から少しのぞく）
+  [-1,1].forEach(sd=>{
+    furPath(cx+sd*(bodyW*0.46), ground-2*s, 19*s, 10*s, 15, 2.4*s);
+    ctx.fillStyle=fur; ctx.fill();
+    ctx.strokeStyle=ink; ctx.lineWidth=1.5; ctx.stroke();
+  });
+
+  eggPath(cx, cyBody, bodyW, bodyH*0.50, bel, 3.4*s, ground);
+  ctx.fillStyle=fur; ctx.fill();
+  ctx.strokeStyle=ink; ctx.lineWidth=1.5; ctx.stroke();
+
+  // お腹（呼吸で前にふくらむ面）
+  const bellyRy=(12+spi*18+bel*9)*s, bellyRx=(22+bel*13)*s;
+  const bellyCy=Math.min(cyBody+(14+bel*8)*s, ground-bellyRy-3*s);
+  furPath(cx+2*s, bellyCy, bellyRx, bellyRy, 16, 2.4*s);
+  ctx.fillStyle=cream; ctx.globalAlpha=0.7; ctx.fill(); ctx.globalAlpha=1;
+
+  // 顔：暗いプレート（からだの幅に収まる大きさ）
+  const faceW=Math.min(bodyW*0.46, 44*s)*0.7, faceH=faceW*0.62;
+  const faceY=headY;
+  ctx.save();
+  ctx.translate(cx, faceY); ctx.rotate(-0.03);
+  ctx.beginPath();
+  if(ctx.roundRect) ctx.roundRect(-faceW, -faceH, faceW*2, faceH*2, faceH*0.95);
+  else ctx.ellipse(0,0,faceW,faceH,0,0,Math.PI*2);
+  ctx.fillStyle=cssVar("--face"); ctx.fill();
+  ctx.restore();
+
+  // 目：起きている＝真円 / 背すじが下がっている＝横棒
+  const closing = dSpine < -0.0004;
+  const eye=cssVar("--eye");
+  const eyeR=faceH*0.30*0.7;
+  ctx.save();
+  ctx.shadowColor=eye; ctx.shadowBlur=9*s;
+  [-1,1].forEach(sd=>{
+    const ex=cx+sd*faceW*0.44, ey=faceY;
+    ctx.strokeStyle=eye; ctx.fillStyle=eye;
+    if(closing){
+      ctx.beginPath(); ctx.moveTo(ex-eyeR*1.5, ey); ctx.lineTo(ex+eyeR*1.5, ey);
+      ctx.lineWidth=eyeR*0.9; ctx.lineCap="round"; ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.arc(ex, ey, eyeR, 0, Math.PI*2); ctx.fill();
+    }
+  });
+  ctx.restore();
+
+  // 腕：付け根は細く先が太い。付け根側は線を描かず体に溶け込ませる
+  const drawArm=(sd,n)=>{
+    const px=cx+sd*bodyW*0.46, py=cyBody-bodyH*0.16;
+    const a=(140-220*n)*Math.PI/180;     // n=0 で真上、0.45 でふだん、1.0 で前
+    const len=(124+n*14)*s, bow=(30-n*10)*s;
+    const dx=Math.sin(a)*sd, dy=Math.cos(a);
+    const ex=px+dx*len, ey=py+dy*len;
+    const mx=(px+ex)/2+dy*bow*sd, my=(py+ey)/2-dx*bow*sd;
+    const pts=[];
+    for(let i=0;i<=40;i++){ const t=i/40, u=1-t;
+      pts.push({x:u*u*px+2*u*t*mx+t*t*ex, y:u*u*py+2*u*t*my+t*t*ey}); }
+
+    const sp=furLimbShape(pts, (14+n*1)*s, (28+n*4)*s, 3.0*s);
+    const line=(from)=>{
+      ctx.beginPath();
+      const L=sp.left.slice(from);
+      ctx.moveTo(L[0].x,L[0].y);
+      L.forEach(q=>ctx.lineTo(q.x,q.y));
+      // 先端は半円（手の先を丸く）
+      ctx.arc(sp.end.x, sp.end.y, sp.rad, sp.dir-Math.PI/2, sp.dir+Math.PI/2);
+      sp.right.slice(from).reverse().forEach(q=>ctx.lineTo(q.x,q.y));
+    };
+    line(0); ctx.closePath(); ctx.fillStyle=fur; ctx.fill();
+    line(2); ctx.strokeStyle=ink; ctx.lineWidth=1.5; ctx.stroke();
+  };
+  drawArm(-1, aL);
+  drawArm( 1, aR);
+
+  // 押した順番（検出の確認用）
+  {
+    const recent = S.taps.filter(e=>now-e.ms<1600);
+    if(recent.length){
+      const seq=[]; recent.forEach(e=>{ if(!seq.length||seq[seq.length-1]!==e.i+1) seq.push(e.i+1); });
+      ctx.save();
+      ctx.fillStyle=cssVar("--muted");
+      ctx.font=`500 ${13*s}px "Roboto Mono", monospace`;
+      ctx.textAlign="left";
+      ctx.fillText(seq.join(" → "), 10*s, 20*s);
+      ctx.restore();
+    }
+  }
+
+  // ジェスチャの文字
+  if(now < S.gestureUntil){
+    ctx.save();
+    ctx.globalAlpha=clamp((S.gestureUntil-now)/500,0,1);
+    ctx.fillStyle=cssVar("--accent");
+    ctx.font=`700 ${22*s}px "Zen Maru Gothic", sans-serif`;
+    ctx.textAlign="center";
+    ctx.fillText(S.gesture, cx, Math.min(ground+30*s, h-12*s));
+    ctx.restore();
+  }
+
+  // 人の手（6cm でお腹の前、70cm で画面の右端。近いと黄色）
+  const near = distCm <= P.near;
+  const t = clamp((distCm-6)/(70-6), 0, 1);
+  const handX = lerp(cx + bodyW*0.80, w - 40*s, t);
+  const handY = cyBody+10*s;
+  handGeom.near = cx + bodyW*0.80;        // 6cm のときの手のx
+  handGeom.far  = w - 40*s;               // 70cm のときの手のx
+  handGeom.y    = handY;
+
+  // 遠いときは「手を近づける」と出す
+  if(!near){
+    ctx.save();
+    ctx.fillStyle=cssVar("--ink");
+    ctx.font=`500 ${13*s}px "Zen Maru Gothic", sans-serif`;
+    ctx.textAlign="center";
+    ctx.fillText("手を近づける", handX, handY+62*s);
+    ctx.restore();
+  }
+  drawHand(handX, handY, s, near?cssVar("--found"):cssVar("--hand"), ink);
+}
+
+// 手（指を上に向けて開いた形）。輪郭はひと続きの線なので太さが均一になる
+function handPath(u){
+  // 指: [中心x, 先端y, 半幅]
+  const F=[[-16,-42,5.6],[-5,-54,5.8],[6,-49,5.6],[16.5,-34,5.2]];
+  const P=(x,y)=>[x*u,y*u];
+  ctx.beginPath();
+  ctx.moveTo(...P(-22,4));
+  // 親指（短めで丸い）
+  ctx.quadraticCurveTo(...P(-29,0), ...P(-32,-8));
+  ctx.quadraticCurveTo(...P(-37,-19), ...P(-29,-22));
+  ctx.quadraticCurveTo(...P(-24,-24), ...P(-22,-17));
+  ctx.quadraticCurveTo(...P(-21.5,-13), ...P(-22,-9));
+  // 指4本（外側 → 先端 → 内側、谷は深めに）
+  F.forEach(([fx,tipY,hw],k)=>{
+    const L=fx-hw, R=fx+hw;
+    if(k===0) ctx.lineTo(...P(L,-30));
+    else      ctx.quadraticCurveTo(...P(L-1.5,-30), ...P(L,-34));   // 指のあいだの谷
+    ctx.lineTo(...P(L,tipY+hw*0.8));
+    ctx.quadraticCurveTo(...P(L,tipY-hw), ...P(fx,tipY-hw));        // 先端の丸み
+    ctx.quadraticCurveTo(...P(R,tipY-hw), ...P(R,tipY+hw*0.8));
+    ctx.lineTo(...P(R, k===3 ? -16 : -34));
+  });
+  // 手のひら
+  ctx.quadraticCurveTo(...P(24,-8), ...P(23,10));
+  ctx.quadraticCurveTo(...P(22,34), ...P(0,36));
+  ctx.quadraticCurveTo(...P(-21,34), ...P(-22,10));
+  ctx.closePath();
+}
+
+function drawHand(x, y, s, fill, ink){
+  const u=s*0.92;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.lineJoin="round"; ctx.lineCap="round";
+  handPath(u);
+  ctx.fillStyle=fill; ctx.fill();
+  ctx.strokeStyle=ink; ctx.lineWidth=3.6*s; ctx.stroke();
+  // 指のつけ根の短い線（手のひらとの境目だけ）
+  [[-10.5,-30],[0.5,-33],[11,-28]].forEach(([fx,fy])=>{
+    ctx.beginPath(); ctx.moveTo(fx*u, fy*u); ctx.lineTo(fx*u, (fy+11)*u);
+    ctx.lineWidth=3.2*s; ctx.stroke();
+  });
+  ctx.restore();
+}
+
+// 起動直後だけ、手の左右に「動かせる」ことを示す矢印を出す
+function drawHandHints(x, y, s, now, ink){
+  const a = clamp((hintUntil-now)/800, 0, 1);
+  if(a<=0) return;
+  ctx.save();
+  ctx.globalAlpha=a*0.85;
+  ctx.strokeStyle=ink; ctx.lineWidth=2.6*s; ctx.lineCap="round"; ctx.lineJoin="round";
+  const puff=Math.sin(now*0.005)*3*s;
+  [[-1, -46*s-puff],[1, 46*s+puff]].forEach(([dir,dx])=>{
+    const ax=x+dx;
+    ctx.beginPath();
+    ctx.moveTo(ax+dir*7*s, y-7*s); ctx.lineTo(ax, y); ctx.lineTo(ax+dir*7*s, y+7*s);
+    ctx.stroke();
+  });
+  ctx.font=`500 ${11*s}px "Zen Maru Gothic", sans-serif`;
+  ctx.fillStyle=ink; ctx.textAlign="center";
+  ctx.fillText("ドラッグ / ← → で動かす", x, y+36*s);
+  ctx.restore();
+}
+
+// --- 画面の数値 ----------------------------------------------------------
+function renderPanels(){
+  const reachable = distCm <= P.near;
+  T.forEach((t,i)=>{
+    $("v"+i).textContent=t.level.toFixed(2);
+    $("k"+i).querySelector(".fill").style.height=(t.level*100)+"%";
+    $("k"+i).dataset.dim = reachable ? "0" : "1";
+  });
+  $("vd").textContent = distCm.toFixed(0);
+  const dot=(id,v)=>{ $(id).style.left=((v+1)/2*100)+"%"; };
+  dot("d_found",S.found); dot("d_ease",S.ease); dot("d_spark",S.spark);
+  $("b_hug").style.width=(S.hug*100)+"%"; $("n_hug").textContent=S.hug.toFixed(2);
+  for(let i=0;i<4;i++){ $("b_a"+i).style.width=(norm(i)*100)+"%"; $("n_a"+i).textContent=Math.round(angles[i])+"°"; }
+}
+
+function writeCode(){
+  $("code").textContent =
+`// 生きものモードの調整値
+const float SPEED_CREATURE = ${P.speed.toFixed(1)}f;   // 度/秒
+const float TOUCH_ON_LEVEL = ${P.thr.toFixed(2)}f;     // 触れたと見なす強さ
+const uint16_t NEAR_MM     = ${Math.round(P.near*10)};     // 近いと見なす距離（${Math.round(P.near)}cm）
+hugging = (since != 0) && (now - since > ${Math.round(P.hold)});
+float rate = (hugTarget > hugAmt) ? ${P.rise.toFixed(1)}f : ${P.fall.toFixed(1)}f;
+
+// リアクションの腕
+const float RAISE_AMOUNT = ${P.raiseAmt.toFixed(2)}f;   // びっくりで上げる量
+const float RAISE_DECAY  = ${P.raiseDecay.toFixed(1)}f;   // 下りる速さ
+const float WAVE_AMP     = ${P.waveAmp.toFixed(2)}f;   // なでの振り幅
+const float WAVE_HZ      = ${P.waveHz.toFixed(1)}f;   // 振る速さ（往復/秒）
+const float WAVE_DECAY   = ${P.waveDecay.toFixed(1)}f;`;
+}
+
+bindSlider("s_hold","o_hold","hold",v=>parseInt(v));
+bindSlider("s_rise","o_rise","rise",v=>(+v).toFixed(1));
+bindSlider("s_fall","o_fall","fall",v=>(+v).toFixed(1));
+bindSlider("s_speed","o_speed","speed",v=>parseInt(v));
+bindSlider("s_thr","o_thr","thr",v=>(+v).toFixed(2));
+bindSlider("s_near","o_near","near",v=>parseInt(v));
+bindSlider("s_raise","o_raise","raiseAmt",v=>(+v).toFixed(2));
+bindSlider("s_rdec","o_rdec","raiseDecay",v=>(+v).toFixed(1));
+bindSlider("s_wamp","o_wamp","waveAmp",v=>(+v).toFixed(2));
+bindSlider("s_whz","o_whz","waveHz",v=>(+v).toFixed(1));
+bindSlider("s_wdec","o_wdec","waveDecay",v=>(+v).toFixed(1));
+writeCode();
+
+$("copy").addEventListener("click",async e=>{
+  const b=e.currentTarget;
+  try{ await navigator.clipboard.writeText($("code").textContent); b.textContent="コピーしました"; }
+  catch{ const r=document.createRange(); r.selectNodeContents($("code"));
+         const sel=getSelection(); sel.removeAllRanges(); sel.addRange(r); b.textContent="選択しました"; }
+  setTimeout(()=>b.textContent="スケッチ用の値をコピー",1600);
+});
+
+let last=performance.now();
+function loop(now){
+  let dt=(now-last)/1000; last=now;
+  if(dt>0.1) dt=0.1;
+  step(dt,now);
+  draw(now);
+  renderPanels();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+
+</body>
+</html>
