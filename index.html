@@ -195,11 +195,11 @@ pre{font-family:var(--mono);font-size:11px;background:var(--bg);border:1px solid
         <label class="slider"><span class="top">ぎゅっ：広く触れ続ける時間<b><span id="o_dhug">500</span> ms</b></span><input type="range" id="s_dhug" min="150" max="2000" step="50" value="500"></label>
         <label class="slider"><span class="top">ぎゅっ：電極が反応したと見なす強さ<b><span id="o_dwide">0.30</span></b></span><input type="range" id="s_dwide" min="0.1" max="0.8" step="0.01" value="0.30"></label>
         <label class="slider"><span class="top">トン：山と見なす強さ（低いほど軽いタップも拾う）<b><span id="o_dtlv">0.10</span></b></span><input type="range" id="s_dtlv" min="0.03" max="0.5" step="0.01" value="0.10"></label>
-        <label class="slider"><span class="top">トントン：トンとトンの間<b><span id="o_dtap">700</span> ms 以内</b></span><input type="range" id="s_dtap" min="250" max="1500" step="50" value="700"></label>
+        <label class="slider"><span class="top">ポンポン：トンとトンの間<b><span id="o_dtap">700</span> ms 以内</b></span><input type="range" id="s_dtap" min="250" max="1500" step="50" value="700"></label>
         <label class="slider"><span class="top">くすぐりの方式<b></b></span>
           <select id="s_tmode" style="width:100%;font:inherit;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg)">
             <option value="pulse">1 連打：指でパラパラと素早く何度も触れる</option>
-            <option value="energy">2 ざわざわ：指先を毛の中でもぞもぞ動かし続ける</option>
+            <option value="energy" selected>2 ざわざわ：指先を毛の中でもぞもぞ動かし続ける</option>
             <option value="rev">3 往復：指先で細かく行ったり来たり（前の方式）</option>
           </select></label>
         <label class="slider" data-tm="pulse"><span class="top">連打：1.2秒にトンの山がこれだけ<b><span id="o_dtic">5</span> 回</b></span><input type="range" id="s_dtic" min="3" max="10" step="1" value="5"></label>
@@ -207,7 +207,7 @@ pre{font-family:var(--mono);font-size:11px;background:var(--bg);border:1px solid
         <label class="slider" data-tm="rev"><span class="top">往復：1秒にこれだけ動いたら<b><span id="o_drvn">4</span> 回</b></span><input type="range" id="s_drvn" min="2" max="10" step="1" value="4"></label>
         <label class="slider" data-tm="rev"><span class="top">往復と見なす動きの幅<b><span id="o_drev">0.08</span></b></span><input type="range" id="s_drev" min="0.03" max="0.3" step="0.01" value="0.08"></label>
         <p class="hint">ぎゅっ＝手のひら、または3本以上の電極に同時に触れ続ける。なでる↓↑＝M5 の判定。
-          トントン＝トンの山が間をあけずに2回（位置は問わない）。くすぐりの札の下の線が右端まで溜まると発動します。
+          ポンポン＝いったん指が離れるトンが、間をあけずに2回（位置は問わない）。くすぐりの札の下の線が右端まで溜まると発動します。
           強さ 1.0 は M5 の感度の「しっかり触れた」量です。</p>
       </div>
     </div>
@@ -327,14 +327,14 @@ const PAT = [
   {name:"ぎゅっ",  ar:""},
   {name:"なでる", ar:"↓"},
   {name:"なでる", ar:"↑"},
-  {name:"トントン", ar:""},
+  {name:"ポンポン", ar:""},
   {name:"くすぐり", ar:""},
 ];
 const HUG=0, DOWN=1, UP=2, TAPTAP=3, TICKLE=4;
 // 検知の調整値（画面下のスライダー）
 const DET = {hugMs:500, wideLv:0.30,
   tapLv:0.10, tapMaxMs:400, tapGap:700,                  // トン（山）の判定
-  tickleMode:"pulse", tickleWin:1200,
+  tickleMode:"energy", tickleWin:1200,
   tickleN:5,                                             // 方式1 連打：1.2秒の山の数
   tickleE:1.5,                                           // 方式2 ざわざわ：1秒の揺れの量
   tickleRevN:4, revH:0.08};                              // 方式3 往復：1秒の折り返し＋移動タッチ
@@ -384,7 +384,8 @@ function classify(k, a, now){
   const env = Math.max(...a.lv), pk = a.pk;
   if(pk.up){
     if(env > pk.ext) pk.ext = env;
-    else if(env < pk.ext*0.5 && pk.ext - env > 0.04){
+    // 半分以下、かつ ほぼ 0 まで落ちたら1回（指がいったん離れた）。毛の中でもぞもぞ動かすだけでは数えない
+    else if(env < Math.min(pk.ext*0.5, DET.tapLv*0.6) && pk.ext - env > 0.04){
       if(pk.ext >= DET.tapLv && now - pk.valleyMs < DET.tapMaxMs && !wide) onPulse(k, a, now);
       pk.up = false; pk.ext = env; pk.valleyMs = now;
     }
@@ -446,7 +447,7 @@ function onPulse(k, a, now){
   const prev = a.lastPulse; a.lastPulse = now;
   if(now < a.tickleUntil) return;                        // くすぐりの最中は数えない
   if(now - prev < DET.tapGap){
-    if(now < a.tapUntil) a.pat[TAPTAP].last = now;       // トントンの続き（数えず、光らせ続ける）
+    if(now < a.tapUntil) a.pat[TAPTAP].last = now;       // ポンポンの続き（数えず、光らせ続ける）
     else firePattern(k, TAPTAP, now);
     a.tapUntil = now + DET.tapGap;
   }
@@ -568,7 +569,7 @@ function reactTickle(now){
   S.wave=0.7; S.wavePhase=0; showGesture("くすぐったい");
   S.gestureLock=now+400;
 }
-// お腹（仮）：なでると深呼吸、トントンでぽんぽん
+// お腹（仮）：なでると深呼吸、ポンポンでぽんぽん
 function reactBelly(kind, now){
   if(now <= S.gestureLock) return;
   if(kind==="rub"){ S.bellyRub=1; S.ease=clamp(S.ease+0.25,-1,1); S.spark=clamp(S.spark+0.1,-1,1);
@@ -668,7 +669,7 @@ function step(dt, now){
     }
   }
 
-  // びっくり：同じところだけを素早く2回以上タップ（実機のときは M5 のトン2回＝トントン）
+  // びっくり：同じところだけを素早く2回以上タップ（実機のときはポンポン）
   for(let i=0;i<N_TOUCH && !live && now>S.gestureLock;i++){
     const mine = S.taps.filter(e=>e.i===i && now-e.ms<700);
     const others = S.taps.filter(e=>e.i!==i && now-e.ms<700);
