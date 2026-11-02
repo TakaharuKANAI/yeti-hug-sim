@@ -91,58 +91,90 @@ pre{font-family:var(--mono);font-size:11px;background:var(--bg);border:1px solid
   padding:10px;overflow-x:auto;margin:10px 0 0;line-height:1.65}
 .btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 
-/* 実機（BLE）: 背中とお腹を横に並べて大きく見る */
-.livehead{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.livehead h2{margin:0}
+/* ---- 画面の配置：左上=背中 / 左下=お腹 / 右=アニメーション / 細かいものは下 ---- */
+.wrap{max-width:none;padding:12px 18px 30px}
+.topbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.topbar h1{font-size:19px;margin:0 8px 0 0}
 .livestat{font-size:13px;color:var(--muted);font-family:var(--mono)}
 .livestat b{color:var(--fg);font-weight:500}
 .livestat[data-on="1"] b{color:var(--ease)}
-.liveopt{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-left:auto}
-.areas{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:12px}
-.area{border:1px solid var(--line);border-radius:12px;padding:10px 12px 12px;background:var(--bg)}
+.liveopt{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-left:auto}
+.main{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:14px;
+  height:calc(100vh - 74px);min-height:600px}
+.leftcol{display:grid;grid-template-rows:minmax(0,1fr) minmax(0,1fr);gap:14px;min-height:0}
+.area{display:flex;flex-direction:column;min-height:0;background:var(--panel);border:2px solid var(--line);
+  border-radius:16px;padding:12px 14px 14px;transition:border-color .2s}
 .area[data-touch="1"]{border-color:var(--accent)}
-.area[data-has="0"]{opacity:.55}
-.area .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.area .top b{font-size:17px}
-.area .top span{font-family:var(--mono);font-size:11px;color:var(--muted)}
-.area canvas{margin-top:8px;border-radius:8px}
-.area .ev{font-size:18px;font-weight:700;min-height:1.6em;margin-top:8px;color:var(--muted);transition:color .3s}
-.area .ev[data-fresh="1"]{color:var(--accent)}
-.area .cnt{font-family:var(--mono);font-size:12px;color:var(--muted)}
-.wrap{max-width:1280px}
+.area .head{display:flex;align-items:baseline;gap:10px}
+.area .head b{font-size:24px;line-height:1}
+.area .head .port{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.area .head .state{margin-left:auto;font-size:14px;color:var(--muted)}
+.area[data-touch="1"] .head .state{color:var(--accent);font-weight:700}
+.area[data-has="0"] .body{opacity:.45}
+.area .body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:14px;margin-top:10px}
+.area canvas{width:100%;height:100%;min-height:0;border-radius:10px}
+.pats{display:grid;grid-template-rows:repeat(5,minmax(0,1fr));gap:7px;min-height:0}
+.pat{display:flex;align-items:center;gap:10px;min-height:0;border:2px solid var(--line);border-radius:12px;
+  padding:0 14px;background:var(--bg);transition:background .6s,border-color .6s,color .6s}
+.pat .nm{font-size:clamp(15px,1.7vw,24px);font-weight:700;white-space:nowrap}
+.pat .ar{font-size:clamp(15px,1.7vw,24px);font-weight:700;color:var(--muted)}
+.pat .n{margin-left:auto;font-family:var(--mono);font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pat[data-lit="1"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,var(--bg));transition:none}
+.pat[data-lit="1"] .nm,.pat[data-lit="1"] .ar{color:var(--accent)}
+.pat[data-on="1"]{border-color:var(--accent);background:var(--accent)}
+.pat[data-on="1"] .nm,.pat[data-on="1"] .ar,.pat[data-on="1"] .n{color:#fff}
+.stagecard{display:flex;flex-direction:column;min-height:0;background:var(--panel);border:1px solid var(--line);
+  border-radius:16px;padding:12px}
+#stage{flex:1;min-height:0;width:100%;height:100%}
+.below{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:14px;align-items:start}
+.below .card + .card{margin-top:0}
+.log{font-family:var(--mono);font-size:12px;line-height:1.75;color:var(--muted);margin:0;padding:0;list-style:none;
+  max-height:220px;overflow:auto}
+.log b{color:var(--fg);font-weight:500}
+@media (max-width:1000px){
+  .main{grid-template-columns:minmax(0,1fr);height:auto;min-height:0}
+  .leftcol{grid-template-rows:auto auto}
+  .area{height:400px}
+  .stagecard{height:78vw}
+}
+@media (max-width:560px){ .area .body{grid-template-columns:minmax(0,1fr)} .area{height:640px} }
 </style>
 
 <div class="wrap">
-  <h1>体験フローシミュレータ</h1>
-
-  <div class="card" id="live" style="margin-bottom:16px">
-    <div class="livehead">
-      <h2>実機のタッチ（BLE）</h2>
-      <button id="bleBtn" class="primary">M5 につなぐ</button>
-      <span class="livestat" id="bleStat">つながっていません</span>
-      <label class="liveopt"><input type="checkbox" id="useLive" checked>実機のタッチで YETI を動かす</label>
-    </div>
-    <div class="areas">
-      <div class="area" id="area0" data-has="0"><div class="top"><b>背中</b><span id="areaInfo0">—</span></div>
-        <canvas id="areaCv0" aria-label="背中の電極ごとの反応と位置"></canvas>
-        <div class="ev" id="areaEv0">—</div><div class="cnt" id="areaCnt0"></div></div>
-      <div class="area" id="area1" data-has="0"><div class="top"><b>お腹</b><span id="areaInfo1">—</span></div>
-        <canvas id="areaCv1" aria-label="お腹の電極ごとの反応と位置"></canvas>
-        <div class="ev" id="areaEv1">—</div><div class="cnt" id="areaCnt1"></div></div>
-    </div>
-    <p class="hint">M5CoreS3_TouchAreas を書き込んだ M5 に、Chrome か Edge からつなぎます（Safari は BLE 非対応）。
-      バーは電極ごとの強さ（上が1本目）、縦の線は触っている位置と軌跡です。
-      つながっている間は、背中の5本がタッチ1〜5の代わりになり、手が遠くても触れられます。
-      背中の「なで」「トン」は M5 の判定をそのまま使います。お腹の反応（なでなで・くすぐったい・ぽかぽか）は仮の割り当てです。</p>
+  <div class="topbar">
+    <h1>体験フローシミュレータ</h1>
+    <button id="bleBtn" class="primary">M5 につなぐ</button>
+    <span class="livestat" id="bleStat">つながっていません</span>
+    <label class="liveopt"><input type="checkbox" id="useLive" checked>実機のタッチで YETI を動かす</label>
   </div>
 
-  <div class="grid">
+  <div class="main">
+    <div class="leftcol">
+      <section class="area" id="area0" data-has="0">
+        <div class="head"><b>背中</b><span class="port">Port B</span><span class="state" id="areaInfo0">—</span></div>
+        <div class="body">
+          <canvas id="areaCv0" aria-label="背中の電極ごとの反応と位置"></canvas>
+          <div class="pats" id="pats0"></div>
+        </div>
+      </section>
+      <section class="area" id="area1" data-has="0">
+        <div class="head"><b>お腹</b><span class="port">Port A</span><span class="state" id="areaInfo1">—</span></div>
+        <div class="body">
+          <canvas id="areaCv1" aria-label="お腹の電極ごとの反応と位置"></canvas>
+          <div class="pats" id="pats1"></div>
+        </div>
+      </section>
+    </div>
+    <div class="stagecard">
+      <canvas id="stage" width="840" height="660" aria-label="生きもののうごき"></canvas>
+    </div>
+  </div>
+
+  <div class="below">
     <div>
       <div class="card">
-        <div class="stagebox">
-          <canvas id="stage" width="840" height="660" aria-label="生きもののうごき"></canvas>
-        </div>
-        <div class="touchrow">
+        <h2>キーボードで試す（M5 につないでいないとき）</h2>
+        <div class="touchrow" style="margin-top:0">
           <button class="touch" id="k0" data-on="0"><span class="fill"></span><b>タッチ1</b><span class="sm">（A）</span><span class="lv" id="v0">0.00</span></button>
           <button class="touch" id="k1" data-on="0"><span class="fill"></span><b>タッチ2</b><span class="sm">（S）</span><span class="lv" id="v1">0.00</span></button>
           <button class="touch" id="k2" data-on="0"><span class="fill"></span><b>タッチ3</b><span class="sm">（D）</span><span class="lv" id="v2">0.00</span></button>
@@ -155,9 +187,23 @@ pre{font-family:var(--mono);font-size:11px;background:var(--bg);border:1px solid
           タッチ1→5の順＝順なで／5→1の順＝逆なで／同じところを素早く2回以上＝びっくり／3つ以上同時に素早く3回以上＝すごくびっくり／2つ以上を長押し＝だきしめる
         </p>
       </div>
+      <div class="card">
+        <h2>検知の調整</h2>
+        <label class="slider"><span class="top">ぎゅっ：広く触れ続ける時間<b><span id="o_dhug">500</span> ms</b></span><input type="range" id="s_dhug" min="150" max="2000" step="50" value="500"></label>
+        <label class="slider"><span class="top">ぎゅっ：電極が反応したと見なす強さ<b><span id="o_dwide">0.30</span></b></span><input type="range" id="s_dwide" min="0.1" max="0.8" step="0.01" value="0.30"></label>
+        <label class="slider"><span class="top">トントン：トンとトンの間<b><span id="o_dtap">700</span> ms 以内</b></span><input type="range" id="s_dtap" min="250" max="1500" step="50" value="700"></label>
+        <label class="slider"><span class="top">くすぐり：1秒にこれだけ動いたら<b><span id="o_dtic">4</span> 回</b></span><input type="range" id="s_dtic" min="2" max="10" step="1" value="4"></label>
+        <label class="slider"><span class="top">くすぐり：往復と見なす動きの幅<b><span id="o_drev">0.08</span></b></span><input type="range" id="s_drev" min="0.03" max="0.3" step="0.01" value="0.08"></label>
+        <p class="hint">ぎゅっ＝手のひら、または3本以上の電極に同時に触れ続ける。なでる↓↑＝M5 の判定。トントン＝同じあたりをトン2回。
+          くすぐり＝指先で細かく往復する・場所を変えて素早く触れる（1秒間の回数）。強さ 1.0 は M5 の感度の「しっかり触れた」量です。</p>
+      </div>
     </div>
 
     <div>
+      <div class="card">
+        <h2>最近の検知</h2>
+        <ul class="log" id="log"><li>まだありません</li></ul>
+      </div>
       <div class="card">
         <h2>ステータス</h2>
         <div class="meter"><div class="ends"><span>こどく</span><span>はっけん</span></div>
@@ -177,7 +223,9 @@ pre{font-family:var(--mono);font-size:11px;background:var(--bg);border:1px solid
         <div class="out"><span>背すじ</span><span class="bar"><i id="b_a3" style="background:var(--ease)"></i></span><span class="num" id="n_a3">—</span></div>
         <p class="hint">腕 130°（開く）〜5°（閉じる）、お腹と背筋 40°〜140°。実機の <span style="font-family:var(--mono)">ACT[]</span> と同じです。</p>
       </div>
+    </div>
 
+    <div>
       <div class="card">
         <h2>パラメータ</h2>
         <label class="slider"><span class="top">だっこと判定するまで<b><span id="o_hold">500</span> ms</b></span><input type="range" id="s_hold" min="100" max="2000" step="50" value="500"></label>
@@ -259,60 +307,132 @@ addEventListener("keyup",e=>{
 // M5 は 1秒に25回、18バイトを通知してくる（中身は M5 側の sendBle() のコメント参照）
 const BLE_SERVICE = "6e5f0001-7965-7469-2d74-6f7563680000";
 const BLE_STATE   = "6e5f0002-7965-7469-2d74-6f7563680000";
-const LIVE_AREAS = ["背中","お腹"];
-const EV_NAME = {1:"下へなでた", 2:"上へなでた", 3:"トン", 4:"じっと"};
+const LIVE_AREAS = ["背中","お腹"];          // M5 から届く順（背中＝Port B、お腹＝Port A）
 const TRAIL_N = 50;
+// 検知パターン（背中・お腹とも同じ5つ）
+const PAT = [
+  {name:"ぎゅっ",  ar:""},
+  {name:"なでる", ar:"↓"},
+  {name:"なでる", ar:"↑"},
+  {name:"トントン", ar:""},
+  {name:"くすぐり", ar:""},
+];
+const HUG=0, DOWN=1, UP=2, TAPTAP=3, TICKLE=4;
+// 検知の調整値（画面下のスライダー）
+const DET = {hugMs:500, wideLv:0.30, tapGap:700, tickleN:4, revH:0.08, tickleWin:1000};
+const newArea = name => ({name, has:false, touching:false, palm:false, pos:-1, lastPos:-1,
+  lv:[0,0,0,0,0], evCount:-1, trail:[],
+  pat: PAT.map(()=>({n:0, last:-1e9, on:false})),
+  wideSince:0, prevTouch:false, track:{ext:-1, dir:0}, rev:[], onsets:[], taps:[],
+  tickleUntil:0, tapUntil:0});
 const LIVE = {
   connected:false, device:null, rate:0, packets:0, rateT:0, lastMs:0,
-  areas: LIVE_AREAS.map(name=>({name, has:false, touching:false, palm:false, palmSeen:false,
-    pos:-1, lv:[0,0,0,0,0], evCount:-1, trail:[], counts:{1:0,2:0,3:0,4:0},
-    lastEv:"—", lastEvMs:0, taps:[]})),
+  areas: LIVE_AREAS.map(newArea),
 };
 const liveOn = () => LIVE.connected && $("useLive").checked;
+const LOG = [];
 
 function onLivePacket(dv){
   if(dv.byteLength < 18 || dv.getUint8(0) !== 1) return;
-  LIVE.packets++; LIVE.lastMs = performance.now();
+  const now = performance.now();
+  LIVE.packets++; LIVE.lastMs = now;
   LIVE.areas.forEach((a,k)=>{
     const o = 2 + k*8, f = dv.getUint8(o);
     a.has = !!(f&1); a.touching = !!(f&2); a.palm = !!(f&4);
-    if(a.palm) a.palmSeen = true;
     const p = dv.getUint8(o+1);
     a.pos = p===255 ? -1 : p/200;
+    if(a.pos >= 0) a.lastPos = a.pos;            // トンは離した瞬間に届くので、直前の位置を覚えておく
     for(let i=0;i<5;i++) a.lv[i] = dv.getUint8(o+2+i)/255;
     a.trail.push(a.pos); if(a.trail.length>TRAIL_N) a.trail.shift();
+    classify(k, a, now);
     const ev = dv.getUint8(o+7), cnt = ev>>4, code = ev&15;
-    if(a.evCount >= 0 && cnt !== a.evCount && code) onLiveEvent(k, code, a);
+    if(a.evCount >= 0 && cnt !== a.evCount && code) onLiveEvent(k, code, a, now);
     a.evCount = cnt;
-    if(!a.touching) a.palmSeen = false;   // 離したら消す（トンは離した瞬間に届くので、上で使い終わっている）
   });
 }
 
-// M5 が判定した動きを、シミュレータの反応につなぐ
-function onLiveEvent(k, code, a){
-  const now = performance.now();
-  a.counts[code] = (a.counts[code]||0) + 1;
-  a.lastEv = EV_NAME[code] || "?"; a.lastEvMs = now;
-  const palmTap = code===3 && a.palmSeen;
-  if(code===3) a.palmSeen = false;
-  if(!liveOn()) return;
-  if(k===0){                                     // 背中
-    if(code===1) reactStroke(+1, 1, now);        // 下へ＝タッチ1→5＝順なで
-    if(code===2) reactStroke(-1, 1, now);        // 上へ＝逆なで
-    if(code===3){
-      if(palmTap){ S.simTaps.push(now); }         // 手のひらでトン → すごくびっくりのもと
-      else {
-        a.taps = a.taps.filter(t=>now-t.ms<700);
-        const near = a.taps.filter(t=>Math.abs(t.pos-a.pos)<0.3 || t.pos<0 || a.pos<0);
-        a.taps.push({ms:now, pos:a.pos});
-        if(near.length>=1){ reactStartle(now); a.taps=[]; }   // 同じあたりを素早く2回
-      }
-    }
-  } else {                                       // お腹（仮の割り当て）
-    if(code===1 || code===2) reactBelly("rub", now);
-    if(code===3) reactBelly("tickle", now);
-    if(code===4) reactBelly("warm", now);
+// 生データから「ぎゅっ」と「くすぐり」を判定する（25回/秒）
+function classify(k, a, now){
+  // ぎゅっ：手のひら、または3本以上に同時に触れたまま DET.hugMs 続く
+  const wide = a.touching && (a.palm || a.lv.filter(v=>v>=DET.wideLv).length >= 3);
+  if(wide){
+    if(!a.wideSince) a.wideSince = now;
+    if(now - a.wideSince >= DET.hugMs) setActive(k, HUG, true, now);
+  } else { a.wideSince = 0; setActive(k, HUG, false, now); }
+
+  // くすぐり：指先の細かい往復（位置の折り返し）と、場所を変えた素早いタッチの回数
+  const t = a.track;
+  if(a.touching && !a.prevTouch){
+    const prev = a.onsets[a.onsets.length-1];
+    a.onsets.push({ms:now, moved: !!prev && a.pos>=0 && prev.pos>=0 && Math.abs(a.pos-prev.pos) > 0.12, pos:a.pos});
   }
+  if(a.touching && a.pos >= 0 && !wide){
+    const h = DET.revH;
+    if(t.ext < 0){ t.ext = a.pos; t.dir = 0; }
+    else if(t.dir === 0){ if(Math.abs(a.pos-t.ext) > h){ t.dir = Math.sign(a.pos-t.ext); t.ext = a.pos; } }
+    else if((a.pos - t.ext)*t.dir > 0) t.ext = a.pos;                    // 同じ向きに進んでいる
+    else if((t.ext - a.pos)*t.dir > h){ a.rev.push(now); t.dir = -t.dir; t.ext = a.pos; }   // 折り返した
+  }
+  if(!a.touching){ t.ext = -1; t.dir = 0; }
+  a.rev    = a.rev.filter(ms => now-ms < DET.tickleWin);
+  a.onsets = a.onsets.filter(o => now-o.ms < DET.tickleWin);
+  const score = a.rev.length + a.onsets.filter(o=>o.moved).length;
+  const tickling = !wide && score >= DET.tickleN;
+  if(tickling) a.tickleUntil = now + 700;
+  setActive(k, TICKLE, tickling, now);
+  a.prevTouch = a.touching;
+}
+
+// M5 が判定した動き（1 下へ / 2 上へ / 3 トン / 4 じっと）
+function onLiveEvent(k, code, a, now){
+  if(code===1 || code===2){
+    if(now < a.tickleUntil || a.pat[HUG].on) return;   // くすぐり・ぎゅっの最中のなでは数えない
+    firePattern(k, code===1 ? DOWN : UP, now);
+  }
+  if(code===3){
+    if(now < a.tickleUntil) return;
+    a.taps = a.taps.filter(t => now-t.ms < DET.tapGap);
+    const near = a.taps.some(t => t.pos<0 || a.lastPos<0 || Math.abs(t.pos-a.lastPos) < 0.35);
+    a.taps.push({ms:now, pos:a.lastPos});
+    if(near){
+      if(now < a.tapUntil) a.pat[TAPTAP].last = now;     // トントンの続き（数えず、光らせ続ける）
+      else firePattern(k, TAPTAP, now);
+      a.tapUntil = now + DET.tapGap;
+    }
+  }
+}
+
+// 続いている間ずっと光るもの（ぎゅっ・くすぐり）
+function setActive(k, i, on, now){
+  const p = LIVE.areas[k].pat[i];
+  if(on && !p.on) firePattern(k, i, now);
+  if(on) p.last = now;
+  p.on = on;
+}
+function firePattern(k, i, now, react=true){
+  const a = LIVE.areas[k], p = a.pat[i];
+  p.n++; p.last = now;
+  const d = new Date();
+  LOG.unshift(`${d.toTimeString().slice(0,8)}  <b>${a.name}</b>  ${PAT[i].name}${PAT[i].ar}`);
+  if(LOG.length > 40) LOG.pop();
+  logDirty = true;
+  if(react && liveOn()) reactPattern(k, i, now);
+}
+let logDirty = false;
+
+// 検知したパターン → YETI の反応
+function reactPattern(k, i, now){
+  if(k===0){                                     // 背中
+    if(i===DOWN)   reactStroke(+1, 1, now);      // 下へ＝順なで
+    if(i===UP)     reactStroke(-1, 1, now);      // 上へ＝逆なで
+    if(i===TAPTAP) reactStartle(now);
+    if(i===TICKLE) reactTickle(now);
+  } else {                                       // お腹（仮の割り当て）
+    if(i===DOWN || i===UP) reactBelly("rub", now);
+    if(i===TAPTAP) reactBelly("pat", now);
+    if(i===TICKLE) reactTickle(now);
+  }
+  // ぎゅっは step() の中でだっこにつなぐ
 }
 
 async function bleConnect(){
@@ -384,15 +504,19 @@ function reactBigStartle(now){
   S.raise=1;                                   // 両手を上げる
   showGesture("すごく びっくり"); S.gestureLock=now+900; S.simTaps=[]; S.taps=[];
 }
-// お腹（仮）：なでると深呼吸、トンでくすぐったい、じっとでぽかぽか
+function reactTickle(now){
+  if(now <= S.gestureLock) return;
+  S.spark=clamp(S.spark+0.25,-1,1); S.startle=Math.max(S.startle,0.4);
+  S.wave=0.7; S.wavePhase=0; showGesture("くすぐったい");
+  S.gestureLock=now+400;
+}
+// お腹（仮）：なでると深呼吸、トントンでぽんぽん
 function reactBelly(kind, now){
   if(now <= S.gestureLock) return;
   if(kind==="rub"){ S.bellyRub=1; S.ease=clamp(S.ease+0.25,-1,1); S.spark=clamp(S.spark+0.1,-1,1);
                     showGesture("おなか なでなで"); }
-  if(kind==="tickle"){ S.spark=clamp(S.spark+0.25,-1,1); S.startle=Math.max(S.startle,0.4);
-                       S.wave=0.7; S.wavePhase=0; showGesture("くすぐったい"); }
-  if(kind==="warm"){ S.ease=clamp(S.ease+0.2,-1,1); S.found=clamp(S.found+0.2,-1,1);
-                     showGesture("ぽかぽか"); }
+  if(kind==="pat"){ S.bellyRub=Math.max(S.bellyRub,0.5); S.ease=clamp(S.ease+0.15,-1,1);
+                    S.found=clamp(S.found+0.1,-1,1); showGesture("ぽんぽん"); }
   S.gestureLock=now+400;
 }
 
@@ -421,6 +545,16 @@ function step(dt, now){
   });
   const avg = onCount ? sum/onCount : 0;
   if(onCount>0) S.lastTouch = now;
+
+  // つないでいないときは、キーボードのタッチを背中のパネルに出す
+  if(!LIVE.connected){
+    const a = LIVE.areas[0];
+    a.has = true; a.touching = onCount>0; a.palm = false;
+    a.lv = T.map(t=>t.level);
+    const tot = a.lv.reduce((s,v)=>s+v,0);
+    a.pos = a.touching ? a.lv.reduce((s,v,i)=>s+v*i,0)/tot/4 : -1;
+    a.trail.push(a.pos); if(a.trail.length>TRAIL_N) a.trail.shift();
+  }
 
   // 押した瞬間を記録。前の押しから 800ms 以上あいていたら、ひと続きの操作ではないので捨てる
   T.forEach((t,i)=>{
@@ -469,27 +603,38 @@ function step(dt, now){
     }
     // 逆なでは誤判定しやすいので、3段以上たどったときだけ
     if(ok && dir<0 && seq.length<3) ok=false;
-    if(ok) reactStroke(dir, clamp(900/Math.max(span,120), 0.2, 2.0), now);
+    if(ok){
+      const before = S.gestureLock;
+      reactStroke(dir, clamp(900/Math.max(span,120), 0.2, 2.0), now);
+      if(S.gestureLock!==before && !LIVE.connected) firePattern(0, dir>0?DOWN:UP, now, false);
+    }
   }
 
-  // びっくり：同じところだけを素早く2回以上タップ（実機のときは M5 のトン2回）
+  // びっくり：同じところだけを素早く2回以上タップ（実機のときは M5 のトン2回＝トントン）
   for(let i=0;i<N_TOUCH && !live && now>S.gestureLock;i++){
     const mine = S.taps.filter(e=>e.i===i && now-e.ms<700);
     const others = S.taps.filter(e=>e.i!==i && now-e.ms<700);
-    if(mine.length>=2 && others.length===0) reactStartle(now);
+    if(mine.length>=2 && others.length===0){
+      reactStartle(now);
+      if(!LIVE.connected) firePattern(0, TAPTAP, now, false);
+    }
   }
 
   // お腹（実機）：触れている間は少しずつ安心する
   if(live){ const b=LIVE.areas[1]; if(b.has && b.touching) S.ease = clamp(S.ease + dt*0.25, -1, 1); }
   S.bellyRub *= (1-clamp(dt*0.5,0,1));
 
-  // だきしめる：3つのうち2つ以上を長押し
+  // だきしめる：キーボードは2つ以上を長押し。実機は背中かお腹の「ぎゅっ」
   let hugging=false;
-  if(onCount>=2){
+  if(live){
+    hugging = LIVE.areas.some(a=>a.pat[HUG].on);
+  } else if(onCount>=2){
     let since=0; T.forEach(t=>{ if(t.on && (since===0||t.onSince<since)) since=t.onSince; });
     hugging = since!==0 && (now-since > P.hold);
   }
-  const hugTarget = hugging ? clamp((avg-0.25)/0.45, 0.25, 1) : 0;
+  if(!LIVE.connected) setActive(0, HUG, hugging, now);
+  const hugAvg = live ? Math.max(avg, 0.75) : avg;
+  const hugTarget = hugging ? clamp((hugAvg-0.25)/0.45, 0.25, 1) : 0;
   S.hug += (hugTarget-S.hug) * clamp(dt*(hugTarget>S.hug?P.rise:P.fall),0,1);
   if(hugging){
     S.ease  = clamp(S.ease + dt*0.7, -1, 1);
@@ -576,10 +721,11 @@ cv.addEventListener("pointermove",e=>{ if(dragging) dragTo(e); });
 ["pointerup","pointercancel"].forEach(ev=>cv.addEventListener(ev,()=>dragging=false));
 cv.style.cursor="ew-resize";
 cv.style.touchAction="none";
+// キャンバスは右の枠いっぱいに広がる。中身は幅と高さの小さいほうに合わせて拡大する
 function fitCanvas(){
   const dpr=Math.min(devicePixelRatio||1,2);
-  const w=cv.clientWidth||420, h=w*0.78;
-  cv.width=w*dpr; cv.height=h*dpr; cv.style.height=h+"px";
+  const w=cv.clientWidth||420, h=cv.clientHeight||w*0.78;
+  if(cv.width!==Math.round(w*dpr) || cv.height!==Math.round(h*dpr)){ cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); }
   ctx.setTransform(dpr,0,0,dpr,0,0);
   return {w,h};
 }
@@ -674,7 +820,7 @@ function draw(now){
 
   const aR=norm(R_ARM), aL=norm(L_ARM), bel=norm(BELLY), spi=norm(SPINE);
   const dSpine = spi - prevSpine; prevSpine = spi;      // 背すじが下がっているか
-  const s=w/420;
+  const s=Math.min(w/420, h/330);
   const cx=w/2;
 
   // からだ：背すじが伸びると縦長の卵、縮むと饅頭
@@ -892,7 +1038,13 @@ function renderPanels(){
   for(let i=0;i<4;i++){ $("b_a"+i).style.width=(norm(i)*100)+"%"; $("n_a"+i).textContent=Math.round(angles[i])+"°"; }
 }
 
-// --- 実機パネル（背中とお腹を並べて大きく） --------------------------------
+// --- 背中・お腹のパネル -------------------------------------------------------
+// パターンの札を作る
+LIVE.areas.forEach((a,k)=>{
+  $("pats"+k).innerHTML = PAT.map((p,i)=>
+    `<div class="pat" id="pat${k}_${i}"><span class="nm">${p.name}</span><span class="ar">${p.ar}</span><span class="n" id="patn${k}_${i}">0</span></div>`).join("");
+});
+
 function renderLive(now){
   // 受信の速さ（1秒ごと）。2秒届かなければ止まっている
   if(now - LIVE.rateT > 1000){ LIVE.rate = LIVE.packets; LIVE.packets = 0; LIVE.rateT = now; }
@@ -902,52 +1054,62 @@ function renderLive(now){
                                    : `<b>つながっています</b> ${LIVE.rate} 回/秒`;
   }
   const accent=cssVar("--accent"), found=cssVar("--found"), muted=cssVar("--muted"),
-        line=cssVar("--line"), fg=cssVar("--fg"), panel=cssVar("--panel");
+        line=cssVar("--line"), fg=cssVar("--fg"), bg=cssVar("--bg");
   LIVE.areas.forEach((a,k)=>{
+    const shown = LIVE.connected || k===0;       // つないでいないときは背中にキーボードを出す
     const box=$("area"+k), cv2=$("areaCv"+k), c=cv2.getContext("2d");
-    box.dataset.has = LIVE.connected && a.has ? "1" : "0";
-    box.dataset.touch = LIVE.connected && a.touching ? "1" : "0";
-    $("areaInfo"+k).textContent = !LIVE.connected ? "—" : (a.has ? (a.touching ? (a.palm ? "手のひら" : "触れている") : "見つかった") : "MPR121 なし");
-    const ev=$("areaEv"+k);
-    ev.textContent = a.lastEv; ev.dataset.fresh = now - a.lastEvMs < 1200 ? "1" : "0";
-    $("areaCnt"+k).textContent = `下へ ${a.counts[1]}　上へ ${a.counts[2]}　トン ${a.counts[3]}　じっと ${a.counts[4]}`;
+    box.dataset.has = shown && a.has ? "1" : "0";
+    box.dataset.touch = shown && a.touching ? "1" : "0";
+    $("areaInfo"+k).textContent = !LIVE.connected ? (k===0 ? "キーボード（A〜G）" : "—")
+      : (a.has ? (a.touching ? (a.palm ? "手のひら" : "触れている") : "待機中") : "MPR121 が見つからない");
 
-    // キャンバス：左に電極ごとのバー、右に位置の縦線と軌跡
-    const dpr=Math.min(devicePixelRatio||1,2), w=cv2.clientWidth||300, h=Math.round(clamp(w*0.42, 150, 260));
-    if(cv2.width!==Math.round(w*dpr)){ cv2.width=w*dpr; cv2.height=h*dpr; cv2.style.height=h+"px"; }
+    PAT.forEach((p,i)=>{
+      const st=a.pat[i], el=$(`pat${k}_${i}`);
+      el.dataset.on  = st.on ? "1" : "0";
+      el.dataset.lit = !st.on && now - st.last < 1200 ? "1" : "0";
+      $(`patn${k}_${i}`).textContent = st.n;
+    });
+
+    // キャンバス：電極ごとのバー（上=1本目）と、右に位置の縦線と軌跡
+    const dpr=Math.min(devicePixelRatio||1,2), w=cv2.clientWidth||300, h=cv2.clientHeight||200;
+    if(cv2.width!==Math.round(w*dpr) || cv2.height!==Math.round(h*dpr)){ cv2.width=Math.round(w*dpr); cv2.height=Math.round(h*dpr); }
     c.setTransform(dpr,0,0,dpr,0,0);
-    c.fillStyle=panel; c.fillRect(0,0,w,h);
-    const n=5, top=10, rowH=(h-20)/n, barX=26, barW=w*0.66, trackX=barX+barW+(w-barX-barW)/2;
-    c.font=`500 12px "Roboto Mono", monospace`; c.textBaseline="middle";
+    c.fillStyle=bg; c.fillRect(0,0,w,h);
+    const n=5, pad=12, rowH=(h-pad*2)/n, barX=30, trackW=Math.max(40, w*0.18), barW=w-barX-trackW-pad;
+    const trackX=barX+barW+trackW/2;
+    c.font=`500 13px "Roboto Mono", monospace`; c.textBaseline="middle";
     for(let i=0;i<n;i++){
-      const y=top+i*rowH, bh=rowH*0.62, yc=y+rowH/2;
-      c.fillStyle=muted; c.textAlign="right"; c.fillText(String(i+1), barX-8, yc);
+      const yc=pad+i*rowH+rowH/2, bh=Math.min(rowH*0.6, 30);
+      c.fillStyle=muted; c.textAlign="right"; c.fillText(String(i+1), barX-9, yc);
       c.fillStyle=line; c.beginPath(); c.roundRect(barX, yc-bh/2, barW, bh, bh/2); c.fill();
-      const v=a.lv[i];
-      if(v>0.005){
-        c.fillStyle = v>=P.thr ? accent : muted;
+      const v=clamp(a.lv[i],0,1);
+      if(shown && v>0.005){
+        c.fillStyle = v>=DET.wideLv ? accent : muted;
         c.beginPath(); c.roundRect(barX, yc-bh/2, Math.max(bh, barW*v), bh, bh/2); c.fill();
       }
     }
-    // しきい値（シミュレータが「触れた」とみなす強さ）
-    c.strokeStyle=fg; c.globalAlpha=0.35; c.setLineDash([3,3]);
-    c.beginPath(); c.moveTo(barX+barW*P.thr, top); c.lineTo(barX+barW*P.thr, h-top); c.stroke();
+    // 「反応した」と見なす強さ（ぎゅっの判定に使う）
+    c.strokeStyle=fg; c.globalAlpha=0.35; c.setLineDash([3,3]); c.lineWidth=1;
+    c.beginPath(); c.moveTo(barX+barW*DET.wideLv, pad); c.lineTo(barX+barW*DET.wideLv, h-pad); c.stroke();
     c.setLineDash([]); c.globalAlpha=1;
     // 位置の縦線（上=1本目）
-    const ty0=top+rowH/2, ty1=top+(n-1)*rowH+rowH/2;
-    c.strokeStyle=line; c.lineWidth=4; c.lineCap="round";
+    const ty0=pad+rowH/2, ty1=pad+(n-1)*rowH+rowH/2;
+    c.strokeStyle=line; c.lineWidth=5; c.lineCap="round";
     c.beginPath(); c.moveTo(trackX,ty0); c.lineTo(trackX,ty1); c.stroke();
-    a.trail.forEach((p,t)=>{
-      if(p<0) return;
-      c.globalAlpha=0.08+0.5*t/a.trail.length; c.fillStyle=accent;
-      c.beginPath(); c.arc(trackX, ty0+p*(ty1-ty0), 4, 0, Math.PI*2); c.fill();
-    });
-    c.globalAlpha=1;
-    if(LIVE.connected && a.touching && a.pos>=0){
-      c.fillStyle = a.palm ? found : accent;
-      c.beginPath(); c.arc(trackX, ty0+a.pos*(ty1-ty0), 10, 0, Math.PI*2); c.fill();
+    if(shown){
+      a.trail.forEach((p,t)=>{
+        if(p<0) return;
+        c.globalAlpha=0.08+0.5*t/a.trail.length; c.fillStyle=accent;
+        c.beginPath(); c.arc(trackX, ty0+p*(ty1-ty0), 5, 0, Math.PI*2); c.fill();
+      });
+      c.globalAlpha=1;
+      if(a.touching && a.pos>=0){
+        c.fillStyle = a.palm ? found : accent;
+        c.beginPath(); c.arc(trackX, ty0+a.pos*(ty1-ty0), 12, 0, Math.PI*2); c.fill();
+      }
     }
   });
+  if(logDirty){ $("log").innerHTML = LOG.map(s=>`<li>${s}</li>`).join(""); logDirty=false; }
 }
 
 function writeCode(){
@@ -978,6 +1140,15 @@ bindSlider("s_rdec","o_rdec","raiseDecay",v=>(+v).toFixed(1));
 bindSlider("s_wamp","o_wamp","waveAmp",v=>(+v).toFixed(2));
 bindSlider("s_whz","o_whz","waveHz",v=>(+v).toFixed(1));
 bindSlider("s_wdec","o_wdec","waveDecay",v=>(+v).toFixed(1));
+// 検知の調整
+const bindDet = (sl,out,key,fmt)=>{ const el=$(sl), o=$(out);
+  const sync=()=>{ DET[key]=parseFloat(el.value); o.textContent=fmt(el.value); };
+  el.addEventListener("input",sync); sync(); };
+bindDet("s_dhug","o_dhug","hugMs",v=>parseInt(v));
+bindDet("s_dwide","o_dwide","wideLv",v=>(+v).toFixed(2));
+bindDet("s_dtap","o_dtap","tapGap",v=>parseInt(v));
+bindDet("s_dtic","o_dtic","tickleN",v=>parseInt(v));
+bindDet("s_drev","o_drev","revH",v=>(+v).toFixed(2));
 writeCode();
 
 $("copy").addEventListener("click",async e=>{
