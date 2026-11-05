@@ -149,6 +149,8 @@ table.sys{width:100%;border-collapse:collapse;font-size:12px}
 table.sys th,table.sys td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:top}
 table.sys th{color:var(--muted);font-weight:500}
 table.sys td.m{font-family:var(--mono)}
+.sysfig{margin-top:14px}
+.sysfig img{display:block;width:100%;max-width:1240px;margin:0 auto;border-radius:10px}
 </style>
 
 <div class="wrap">
@@ -256,7 +258,7 @@ table.sys td.m{font-family:var(--mono)}
         <pre id="code"></pre>
       </div>
       <div class="card">
-        <h2>システム構成</h2>
+        <h2>システム構成（表）</h2>
         <table class="sys">
           <tr><th>端子</th><th>つなぐもの</th><th>アドレス</th></tr>
           <tr><td>Port A<br><span class="m">G2 / G1</span></td><td>お腹 → 左腕（タッチ）</td><td class="m">0x5A / 0x5B</td></tr>
@@ -267,6 +269,10 @@ table.sys td.m{font-family:var(--mono)}
           サーボ CH0 右腕開閉 / CH1 右腕上下 / CH2 左腕開閉 / CH3 左腕上下 / CH4 お腹 / CH5 背筋。</p>
       </div>
     </div>
+  </div>
+  <div class="card sysfig">
+    <h2>ハード構成図</h2>
+    <img src="system.svg" alt="YETI のハード構成図。正面に M5、両腕とお腹の電極、背面に背中の電極。Port A はお腹と左腕、Port B は背中と右腕、Port C はハブ経由で 8Servos・ToF・DAC2">
   </div>
 </div>
 

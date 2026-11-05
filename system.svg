@@ -1,0 +1,192 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 990" font-family="'Zen Maru Gothic','Hiragino Maru Gothic ProN','Hiragino Sans',sans-serif">
+  <title>YETI ハード構成図</title>
+  <defs>
+    <style>
+      .t{font-size:14px;fill:#332d26}
+      .s{font-size:12px;fill:#857a6d}
+      .b{font-size:15px;font-weight:700;fill:#332d26}
+      .h{font-size:20px;font-weight:700;fill:#332d26}
+      .m{font-family:'Roboto Mono',ui-monospace,Menlo,monospace;font-size:12px;fill:#332d26}
+      .fur{fill:#eceae6;stroke:#5a6068;stroke-width:2}
+      .pa{stroke:#d1694a;stroke-width:4;fill:none;stroke-linejoin:round}
+      .pb{stroke:#3b7dd8;stroke-width:4;fill:none;stroke-linejoin:round}
+      .pc{stroke:#2f9a6e;stroke-width:4;fill:none;stroke-linejoin:round}
+      .el{stroke:#d9568f;stroke-width:2;stroke-dasharray:4 4;fill:none}
+      .sv{fill:#fff;stroke:#8a7f72;stroke-width:1.5}
+      .pad{fill:#fbe3ec;stroke:#d9568f;stroke-width:1.5}
+    </style>
+  </defs>
+
+  <rect width="1240" height="990" fill="#faf7f2"/>
+  <text x="36" y="46" class="h">YETI ハード構成図</text>
+  <text x="36" y="70" class="s">正面図は YETI と向かい合って見た向き（図の左が YETI の右腕）。M5・ハブ・ToF・サーボの位置は仮。つなぎ方とアドレスは M5CoreS3_YetiMain と同じ。</text>
+
+  <!-- ===================== 正面 ===================== -->
+  <text x="430" y="120" text-anchor="middle" class="b">正面</text>
+
+  <!-- 足 -->
+  <ellipse cx="335" cy="772" rx="46" ry="16" class="fur"/>
+  <ellipse cx="525" cy="772" rx="46" ry="16" class="fur"/>
+  <!-- 腕（図の左 = 右腕） -->
+  <path d="M262 390 Q160 470 140 640" stroke="#5a6068" stroke-width="74" stroke-linecap="round" fill="none"/>
+  <path d="M262 390 Q160 470 140 640" stroke="#eceae6" stroke-width="70" stroke-linecap="round" fill="none"/>
+  <path d="M598 390 Q700 470 720 640" stroke="#5a6068" stroke-width="74" stroke-linecap="round" fill="none"/>
+  <path d="M598 390 Q700 470 720 640" stroke="#eceae6" stroke-width="70" stroke-linecap="round" fill="none"/>
+  <!-- からだ -->
+  <ellipse cx="430" cy="500" rx="200" ry="280" class="fur"/>
+  <!-- 顔 -->
+  <rect x="370" y="272" width="120" height="62" rx="30" fill="#2a3038"/>
+  <circle cx="402" cy="303" r="8" fill="#4bd8e8"/>
+  <circle cx="458" cy="303" r="8" fill="#4bd8e8"/>
+
+  <!-- 腕の電極（付け根→先 = E0, E2, E5, E8, E11） -->
+  <g class="pad">
+    <rect x="195" y="441" width="26" height="10" rx="4" transform="rotate(-55 208 446)"/>
+    <rect x="174" y="475" width="26" height="10" rx="4" transform="rotate(-65 187 480)"/>
+    <rect x="156" y="513" width="26" height="10" rx="4" transform="rotate(-75 169 518)"/>
+    <rect x="142" y="556" width="26" height="10" rx="4" transform="rotate(-82 155 561)"/>
+    <rect x="132" y="602" width="26" height="10" rx="4" transform="rotate(-86 145 607)"/>
+    <rect x="639" y="441" width="26" height="10" rx="4" transform="rotate(55 652 446)"/>
+    <rect x="660" y="475" width="26" height="10" rx="4" transform="rotate(65 673 480)"/>
+    <rect x="678" y="513" width="26" height="10" rx="4" transform="rotate(75 691 518)"/>
+    <rect x="692" y="556" width="26" height="10" rx="4" transform="rotate(82 705 561)"/>
+    <rect x="702" y="602" width="26" height="10" rx="4" transform="rotate(86 715 607)"/>
+  </g>
+  <text x="128" y="400" text-anchor="middle" class="b">右腕</text>
+  <text x="732" y="400" text-anchor="middle" class="b">左腕</text>
+  <text x="128" y="418" text-anchor="middle" class="s">付け根 E0 → 先 E11</text>
+  <text x="732" y="418" text-anchor="middle" class="s">付け根 E0 → 先 E11</text>
+
+  <!-- お腹の電極（上→下 = E0, E2, E5, E8, E11） -->
+  <rect x="360" y="562" width="140" height="118" rx="22" fill="#dcdbd6" stroke="#5a6068" stroke-width="1.5"/>
+  <g class="pad">
+    <rect x="378" y="574" width="104" height="10" rx="4"/>
+    <rect x="378" y="595" width="104" height="10" rx="4"/>
+    <rect x="378" y="616" width="104" height="10" rx="4"/>
+    <rect x="378" y="637" width="104" height="10" rx="4"/>
+    <rect x="378" y="658" width="104" height="10" rx="4"/>
+  </g>
+  <text x="430" y="556" text-anchor="middle" class="s">お腹の電極 E0〜E11（上→下）</text>
+
+  <!-- サーボ（信号はすべて 8Servos から） -->
+  <rect x="246" y="352" width="34" height="20" rx="4" class="sv"/>
+  <text x="263" y="366" text-anchor="middle" class="m">0·1</text>
+  <rect x="580" y="352" width="34" height="20" rx="4" class="sv"/>
+  <text x="597" y="366" text-anchor="middle" class="m">2·3</text>
+  <rect x="512" y="640" width="34" height="20" rx="4" class="sv"/>
+  <text x="529" y="654" text-anchor="middle" class="m">4</text>
+
+  <!-- M5 -->
+  <rect x="345" y="362" width="170" height="84" rx="10" fill="#2a3038"/>
+  <text x="430" y="396" text-anchor="middle" font-size="15" font-weight="700" fill="#fff">M5Stack CoreS3</text>
+  <text x="430" y="418" text-anchor="middle" font-size="12" fill="#c9c2b8">＋ ベース</text>
+  <rect x="331" y="384" width="18" height="26" rx="3" fill="#3b7dd8"/>
+  <text x="340" y="402" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">B</text>
+  <rect x="511" y="384" width="18" height="26" rx="3" fill="#d1694a"/>
+  <text x="520" y="402" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">A</text>
+  <rect x="417" y="442" width="26" height="16" rx="3" fill="#2f9a6e"/>
+  <text x="430" y="455" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">C</text>
+
+  <!-- ハブと Port C の先 -->
+  <rect x="380" y="474" width="100" height="32" rx="6" fill="#fff" stroke="#2f9a6e" stroke-width="2"/>
+  <text x="430" y="495" text-anchor="middle" class="t">Unit Hub</text>
+  <rect x="236" y="456" width="108" height="44" rx="6" fill="#fff" stroke="#2f9a6e" stroke-width="2"/>
+  <text x="290" y="475" text-anchor="middle" class="t">8Servos</text>
+  <text x="290" y="492" text-anchor="middle" class="m">0x25</text>
+  <rect x="236" y="512" width="108" height="44" rx="6" fill="#fff" stroke="#2f9a6e" stroke-width="2"/>
+  <text x="290" y="531" text-anchor="middle" class="t">DAC2</text>
+  <text x="290" y="548" text-anchor="middle" class="m">0x59</text>
+  <rect x="403" y="236" width="54" height="26" rx="5" fill="#fff" stroke="#2f9a6e" stroke-width="2"/>
+  <text x="430" y="254" text-anchor="middle" class="m">ToF</text>
+  <text x="463" y="254" class="m">0x29</text>
+  <path class="pc" d="M430 458 V474"/>
+  <path class="pc" d="M380 484 H344"/>
+  <path class="pc" d="M380 498 H362 V534 H344"/>
+  <!-- ToF へ（Port A と交差するところは飛び越える） -->
+  <path class="pc" d="M480 490 H545 V407 A8 8 0 0 0 545 391 V249 H457"/>
+
+  <!-- DAC2 → ITV（からだの外） -->
+  <path d="M262 556 V798" stroke="#2f9a6e" stroke-width="3" stroke-dasharray="8 5" fill="none"/>
+  <rect x="200" y="798" width="190" height="40" rx="6" fill="#fff" stroke="#8a7f72" stroke-width="1.5"/>
+  <text x="295" y="815" text-anchor="middle" class="t">ITV2050（空気圧）</text>
+  <text x="295" y="831" text-anchor="middle" class="s">0〜5V 入力・24V 別電源</text>
+
+  <!-- Port A：お腹 → 左腕 -->
+  <path class="pa" d="M529 397 H562 V718 H500"/>
+  <rect x="360" y="700" width="140" height="48" rx="6" fill="#fff" stroke="#d1694a" stroke-width="2"/>
+  <text x="430" y="719" text-anchor="middle" class="t">お腹 MPR121</text>
+  <text x="430" y="737" text-anchor="middle" class="m">0x5A ＋LDO</text>
+  <path class="el" d="M430 700 V680"/>
+  <path class="pa" d="M500 738 H812 V700"/>
+  <rect x="742" y="644" width="140" height="56" rx="6" fill="#fff" stroke="#d1694a" stroke-width="2"/>
+  <text x="812" y="664" text-anchor="middle" class="t">左腕 MPR121</text>
+  <text x="812" y="681" text-anchor="middle" class="m">0x5B ＋LDO</text>
+  <text x="812" y="695" text-anchor="middle" class="s">ADD → 3.3V</text>
+  <path class="el" d="M760 644 L712 590"/>
+
+  <!-- Port B：背中（背面図）→ 右腕 -->
+  <path class="pb" d="M331 397 H306 V218 H232"/>
+  <rect x="40" y="198" width="192" height="40" rx="6" fill="#eef4fc" stroke="#3b7dd8" stroke-width="2"/>
+  <text x="136" y="223" text-anchor="middle" class="t">→ 背中 MPR121（背面図）</text>
+  <rect x="40" y="682" width="192" height="30" rx="6" fill="#eef4fc" stroke="#3b7dd8" stroke-width="2"/>
+  <text x="136" y="702" text-anchor="middle" class="t">背中 MPR121 から →</text>
+  <path class="pb" d="M136 712 V728"/>
+  <rect x="40" y="728" width="140" height="56" rx="6" fill="#fff" stroke="#3b7dd8" stroke-width="2" transform="translate(-4 0)"/>
+  <text x="106" y="748" text-anchor="middle" class="t">右腕 MPR121</text>
+  <text x="106" y="765" text-anchor="middle" class="m">0x5B ＋LDO</text>
+  <text x="106" y="779" text-anchor="middle" class="s">ADD → 3.3V</text>
+  <path class="el" d="M166 728 L150 618"/>
+
+  <!-- ===================== 背面 ===================== -->
+  <text x="1040" y="120" text-anchor="middle" class="b">背面</text>
+  <ellipse cx="975" cy="760" rx="38" ry="14" class="fur"/>
+  <ellipse cx="1105" cy="760" rx="38" ry="14" class="fur"/>
+  <path d="M905 400 Q860 460 852 560" stroke="#5a6068" stroke-width="54" stroke-linecap="round" fill="none"/>
+  <path d="M905 400 Q860 460 852 560" stroke="#eceae6" stroke-width="50" stroke-linecap="round" fill="none"/>
+  <path d="M1175 400 Q1220 460 1228 560" stroke="#5a6068" stroke-width="54" stroke-linecap="round" fill="none"/>
+  <path d="M1175 400 Q1220 460 1228 560" stroke="#eceae6" stroke-width="50" stroke-linecap="round" fill="none"/>
+  <ellipse cx="1040" cy="520" rx="150" ry="250" class="fur"/>
+  <text x="868" y="386" text-anchor="middle" class="s">左腕</text>
+  <text x="1212" y="386" text-anchor="middle" class="s">右腕</text>
+
+  <!-- 背中の電極（上→下 = E0, E2, E5, E8, E11） -->
+  <rect x="980" y="340" width="120" height="216" rx="20" fill="#dcdbd6" stroke="#5a6068" stroke-width="1.5"/>
+  <g class="pad">
+    <rect x="996" y="360" width="88" height="12" rx="5"/>
+    <rect x="996" y="402" width="88" height="12" rx="5"/>
+    <rect x="996" y="444" width="88" height="12" rx="5"/>
+    <rect x="996" y="486" width="88" height="12" rx="5"/>
+    <rect x="996" y="528" width="88" height="12" rx="5"/>
+  </g>
+  <g class="m" text-anchor="end">
+    <text x="974" y="371">E0</text><text x="974" y="413">E2</text><text x="974" y="455">E5</text>
+    <text x="974" y="497">E8</text><text x="974" y="539">E11</text>
+  </g>
+  <text x="1040" y="332" text-anchor="middle" class="s">背中の電極（上→下）</text>
+
+  <rect x="980" y="584" width="120" height="48" rx="6" fill="#fff" stroke="#3b7dd8" stroke-width="2"/>
+  <text x="1040" y="603" text-anchor="middle" class="t">背中 MPR121</text>
+  <text x="1040" y="621" text-anchor="middle" class="m">0x5A ＋LDO</text>
+  <path class="el" d="M1040 584 V556"/>
+  <!-- Port B から入って、右腕へ -->
+  <rect x="930" y="198" width="220" height="40" rx="6" fill="#eef4fc" stroke="#3b7dd8" stroke-width="2"/>
+  <text x="1040" y="223" text-anchor="middle" class="t">M5 の Port B から</text>
+  <path class="pb" d="M1124 238 V608 H1100"/>
+  <path class="pb" d="M1040 632 V690"/>
+  <rect x="955" y="690" width="170" height="30" rx="6" fill="#eef4fc" stroke="#3b7dd8" stroke-width="2"/>
+  <text x="1040" y="710" text-anchor="middle" class="t">→ 右腕 MPR121（正面図）</text>
+  <!-- 背筋サーボ -->
+  <rect x="1060" y="644" width="34" height="20" rx="4" class="sv" transform="translate(30 0)"/>
+  <text x="1107" y="658" text-anchor="middle" class="m">5</text>
+  <text x="1134" y="658" class="s">背筋</text>
+
+  <!-- ===================== 凡例 ===================== -->
+  <line x1="40" y1="856" x2="1200" y2="856" stroke="#e2d9cc"/>
+  <path class="pa" d="M40 884 H80"/><text x="88" y="889" class="t">Port A（G2/G1）ソフトI2C</text>
+  <path class="pb" d="M300 884 H340"/><text x="348" y="889" class="t">Port B（G8/G9）ソフトI2C</text>
+  <path class="pc" d="M560 884 H600"/><text x="608" y="889" class="t">Port C（G18/G17）ハードI2C</text>
+  <path class="el" d="M840 884 H880"/><text x="888" y="889" class="t">電極の線（MPR121 → 電極）</text>
+  <rect x="40" y="908" width="30" height="18" rx="4" class="sv"/><text x="78" y="922" class="t">サーボ（数字＝8Servos の CH）</text>
+  <text x="300" y="922" class="s">CH0 右腕開閉・CH1 右腕上下・CH2 左腕開閉・CH3 左腕上下・CH4 お腹・CH5 背筋。信号はすべて 8Servos から（線は省略）</text>
+  <text x="40" y="956" class="s">MPR121 は Grove の 5V → 3.3V LDO（AMS1117-3.3）で給電。サーボ電源：お腹・背筋は 8Servos の外部電源、腕は腕ユニットの電池（信号と GND だけ）。ITV は 24V 別電源。GND はすべて共通。</text>
+</svg>
