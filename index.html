@@ -101,24 +101,24 @@ pre{font-family:var(--mono);font-size:11px;background:var(--bg);border:1px solid
 .liveopt{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-left:auto}
 .main{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:14px;
   height:calc(100vh - 74px);min-height:600px}
-.leftcol{display:grid;grid-template-rows:minmax(0,1fr) minmax(0,1fr);gap:14px;min-height:0}
+.leftcol{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr);gap:12px;min-height:0}
 .area{display:flex;flex-direction:column;min-height:0;background:var(--panel);border:2px solid var(--line);
   border-radius:16px;padding:12px 14px 14px;transition:border-color .2s}
 .area[data-touch="1"]{border-color:var(--accent)}
 .area .head{display:flex;align-items:baseline;gap:10px}
-.area .head b{font-size:24px;line-height:1}
+.area .head b{font-size:20px;line-height:1}
 .area .head .port{font-family:var(--mono);font-size:12px;color:var(--muted)}
 .area .head .state{margin-left:auto;font-size:14px;color:var(--muted)}
 .area[data-touch="1"] .head .state{color:var(--accent);font-weight:700}
 .area[data-has="0"] .body{opacity:.45}
-.area .body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:14px;margin-top:10px}
+.area .body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:8px}
 .area canvas{width:100%;height:100%;min-height:0;border-radius:10px}
-.pats{display:grid;grid-template-rows:repeat(4,minmax(0,1fr));gap:7px;min-height:0}
-.pat{display:flex;align-items:center;gap:10px;min-height:0;border:2px solid var(--line);border-radius:12px;
-  padding:0 14px;background:var(--bg);transition:background .6s,border-color .6s,color .6s}
-.pat .nm{font-size:clamp(15px,1.7vw,24px);font-weight:700;white-space:nowrap}
-.pat .ar{font-size:clamp(15px,1.7vw,24px);font-weight:700;color:var(--muted)}
-.pat .n{margin-left:auto;font-family:var(--mono);font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.pats{display:grid;grid-template-rows:repeat(4,minmax(0,1fr));gap:6px;min-height:0}
+.pat{display:flex;align-items:center;gap:6px;min-height:0;border:2px solid var(--line);border-radius:10px;
+  padding:0 10px;background:var(--bg);transition:background .6s,border-color .6s,color .6s}
+.pat .nm{font-size:clamp(13px,1.15vw,19px);font-weight:700;white-space:nowrap}
+.pat .ar{font-size:clamp(13px,1.15vw,19px);font-weight:700;color:var(--muted)}
+.pat .n{margin-left:auto;font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
 .pat[data-lit="1"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,var(--bg));transition:none}
 .pat[data-lit="1"] .nm,.pat[data-lit="1"] .ar{color:var(--accent)}
 .pat{position:relative;overflow:hidden}
@@ -135,10 +135,20 @@ pre{font-family:var(--mono);font-size:11px;background:var(--bg);border:1px solid
 @media (max-width:1000px){
   .main{grid-template-columns:minmax(0,1fr);height:auto;min-height:0}
   .leftcol{grid-template-rows:auto auto}
-  .area{height:400px}
+  .area{height:300px}
   .stagecard{height:78vw}
 }
-@media (max-width:560px){ .area .body{grid-template-columns:minmax(0,1fr)} .area{height:640px} }
+@media (max-width:680px){ .leftcol{grid-template-columns:minmax(0,1fr);grid-template-rows:none} .area{height:280px} }
+/* M5 の状態 */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chip{font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.chip[data-on="1"]{border-color:var(--ease);color:var(--ease)}
+.chip[data-mode="1"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.srcnote{font-size:12px;color:var(--muted);margin:-4px 0 10px}
+table.sys{width:100%;border-collapse:collapse;font-size:12px}
+table.sys th,table.sys td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+table.sys th{color:var(--muted);font-weight:500}
+table.sys td.m{font-family:var(--mono)}
 </style>
 
 <div class="wrap">
@@ -146,26 +156,12 @@ pre{font-family:var(--mono);font-size:11px;background:var(--bg);border:1px solid
     <h1>体験フローシミュレータ</h1>
     <button id="bleBtn" class="primary">M5 につなぐ</button>
     <span class="livestat" id="bleStat">つながっていません</span>
-    <label class="liveopt"><input type="checkbox" id="useLive" checked>実機のタッチで YETI を動かす</label>
+    <label class="liveopt"><input type="checkbox" id="useMirror" checked>M5 の姿勢をそのまま映す</label>
+    <label class="liveopt" style="margin-left:0"><input type="checkbox" id="useLive" checked>実機のタッチでシミュレータを動かす</label>
   </div>
 
   <div class="main">
-    <div class="leftcol">
-      <section class="area" id="area0" data-has="0">
-        <div class="head"><b>背中</b><span class="port">Port B</span><span class="state" id="areaInfo0">—</span></div>
-        <div class="body">
-          <canvas id="areaCv0" aria-label="背中の電極ごとの反応と位置"></canvas>
-          <div class="pats" id="pats0"></div>
-        </div>
-      </section>
-      <section class="area" id="area1" data-has="0">
-        <div class="head"><b>お腹</b><span class="port">Port A</span><span class="state" id="areaInfo1">—</span></div>
-        <div class="body">
-          <canvas id="areaCv1" aria-label="お腹の電極ごとの反応と位置"></canvas>
-          <div class="pats" id="pats1"></div>
-        </div>
-      </section>
-    </div>
+    <div class="leftcol" id="leftcol"></div>
     <div class="stagecard">
       <canvas id="stage" width="840" height="660" aria-label="生きもののうごき"></canvas>
     </div>
@@ -219,11 +215,22 @@ pre{font-family:var(--mono);font-size:11px;background:var(--bg);border:1px solid
 
       <div class="card">
         <h2>サーボ</h2>
-        <div class="out"><span>右腕 開閉</span><span class="bar"><i id="b_a0"></i></span><span class="num" id="n_a0">—</span></div>
-        <div class="out"><span>左腕 開閉</span><span class="bar"><i id="b_a1"></i></span><span class="num" id="n_a1">—</span></div>
-        <div class="out"><span>おなか</span><span class="bar"><i id="b_a2" style="background:var(--ease)"></i></span><span class="num" id="n_a2">—</span></div>
-        <div class="out"><span>背すじ</span><span class="bar"><i id="b_a3" style="background:var(--ease)"></i></span><span class="num" id="n_a3">—</span></div>
-        <p class="hint">腕 130°（開く）〜5°（閉じる）、お腹と背筋 40°〜140°。実機の <span style="font-family:var(--mono)">ACT[]</span> と同じです。</p>
+        <p class="srcnote" id="servoSrc">シミュレータの値</p>
+        <div id="servoRows"></div>
+        <p class="hint">角度は実機の <span style="font-family:var(--mono)">ACT[]</span> と同じ範囲。M5 で信号を出していない軸は「—」。</p>
+      </div>
+      <div class="card">
+        <h2>M5 の状態</h2>
+        <div class="chips" id="m5Modes"></div>
+        <div class="chips" id="m5Units"></div>
+        <div class="out"><span>空気圧</span><span class="bar"><i id="b_air" style="background:var(--ease)"></i></span><span class="num" id="n_air">—</span></div>
+        <div class="out"><span>距離</span><span class="bar"><i id="b_tof" style="background:var(--found)"></i></span><span class="num" id="n_tof">—</span></div>
+        <div class="out"><span>きぶん</span><span class="bar"><i id="b_m0" style="background:var(--found)"></i></span><span class="num" id="n_m0">—</span></div>
+        <div class="out"><span>あんしん</span><span class="bar"><i id="b_m1" style="background:var(--ease)"></i></span><span class="num" id="n_m1">—</span></div>
+        <div class="out"><span>けいかい</span><span class="bar"><i id="b_m2"></i></span><span class="num" id="n_m2">—</span></div>
+        <div class="out"><span>ねむけ</span><span class="bar"><i id="b_m3" style="background:var(--muted)"></i></span><span class="num" id="n_m3">—</span></div>
+        <div class="out"><span>だっこ</span><span class="bar"><i id="b_m4" style="background:var(--spark)"></i></span><span class="num" id="n_m4">—</span></div>
+        <p class="hint" id="m5Note">M5 につなぐと、M5 のモード・サーボ・空気圧・きもちがここに出ます（M5CoreS3_YetiMain が必要）。</p>
       </div>
     </div>
 
@@ -247,6 +254,17 @@ pre{font-family:var(--mono);font-size:11px;background:var(--bg);border:1px solid
           <button id="copy" class="primary">スケッチ用の値をコピー</button>
         </div>
         <pre id="code"></pre>
+      </div>
+      <div class="card">
+        <h2>システム構成</h2>
+        <table class="sys">
+          <tr><th>端子</th><th>つなぐもの</th><th>アドレス</th></tr>
+          <tr><td>Port A<br><span class="m">G2 / G1</span></td><td>お腹 → 左腕（タッチ）</td><td class="m">0x5A / 0x5B</td></tr>
+          <tr><td>Port B<br><span class="m">G8 / G9</span></td><td>背中 → 右腕（タッチ）</td><td class="m">0x5A / 0x5B</td></tr>
+          <tr><td>Port C<br><span class="m">G18 / G17</span></td><td>ハブ → 8Servos・ToF・DAC2（空気圧）</td><td class="m">0x25 / 0x29 / 0x59</td></tr>
+        </table>
+        <p class="hint">タッチ基板は Grove の 5V → 3.3V LDO → MPR121。腕の基板は ADD を 3.3V に。
+          サーボ CH0 右腕開閉 / CH1 右腕上下 / CH2 左腕開閉 / CH3 左腕上下 / CH4 お腹 / CH5 背筋。</p>
       </div>
     </div>
   </div>
@@ -305,11 +323,42 @@ addEventListener("keyup",e=>{
   if(isFarKey(e))  farKey=0;
 });
 
-// --- 実機（M5CoreS3_TouchAreas と BLE でつなぐ） ---------------------------
-// M5 は 1秒に25回、18バイトを通知してくる（中身は M5 側の sendBle() のコメント参照）
+// --- 実機（M5CoreS3_YetiMain と BLE でつなぐ） ------------------------------
+// M5 は 20 バイト以内の通知を3種類送ってくる（中身は M5 側の sendBle() のコメント参照）
+//  先頭 1 = 背中・お腹 / 3 = 右腕・左腕（1秒に50回）/ 4 = からだ（1秒に10回）
+//  旧版の M5CoreS3_TouchAreas は 1 だけを送る（背中・お腹だけ表示される）
 const BLE_SERVICE = "6e5f0001-7965-7469-2d74-6f7563680000";
 const BLE_STATE   = "6e5f0002-7965-7469-2d74-6f7563680000";
-const LIVE_AREAS = ["背中","お腹"];          // M5 から届く順（背中＝Port B、お腹＝Port A）
+// M5 から届く順。port は配線（SYSTEM.md と同じ）
+const AREA_DEF = [
+  {name:"背中", port:"Port B · 0x5A"},
+  {name:"お腹", port:"Port A · 0x5A"},
+  {name:"右腕", port:"Port B · 0x5B"},
+  {name:"左腕", port:"Port A · 0x5B"},
+];
+const LIVE_AREAS = AREA_DEF.map(a=>a.name);
+const GRID_ORDER = [0,2,1,3];               // 画面の並び：左上=背中 右上=右腕 左下=お腹 右下=左腕
+$("leftcol").innerHTML = GRID_ORDER.map(k=>`
+  <section class="area" id="area${k}" data-has="0">
+    <div class="head"><b>${AREA_DEF[k].name}</b><span class="port">${AREA_DEF[k].port}</span><span class="state" id="areaInfo${k}">—</span></div>
+    <div class="body">
+      <canvas id="areaCv${k}" aria-label="${AREA_DEF[k].name}の電極ごとの反応と位置"></canvas>
+      <div class="pats" id="pats${k}"></div>
+    </div>
+  </section>`).join("");
+// M5 のサーボ（M5CoreS3_YetiMain の ACT[] と同じ。min = 指令値0.0 / max = 1.0）
+const M5ACT = [
+  {name:"右腕 開閉", min:130, max:5},
+  {name:"右腕 上下", min:75,  max:105},
+  {name:"左腕 開閉", min:130, max:5},
+  {name:"左腕 上下", min:75,  max:105},
+  {name:"おなか",   min:0,   max:40},
+  {name:"背すじ",   min:0,   max:40},
+];
+const M5_MODES = ["ロボット","いきもの","エア","タッチ"];
+const M5_GESTURES = ["","はっけん","なでられた","さかなで…","びっくり","ぎゅっ",
+  "おなか なでなで","ぽんぽん","右腕 なでなで","左腕 なでなで","右腕 ぽんぽん","左腕 ぽんぽん"];
+const AIR_PATS = ["ギュッ","ふわふわ","エキサイト","マニュアル"];
 const TRAIL_N = 50;
 // 検知パターン（背中・お腹とも同じ4つ）
 const PAT = [
@@ -329,18 +378,28 @@ const newArea = name => ({name, has:false, touching:false, palm:false, pos:-1, l
   pat: PAT.map(()=>({n:0, last:-1e9, on:false})),
   wideSince:0, pk:{up:false, ext:0, valleyMs:0}, tapUntil:0, lastPulse:-1e9});
 const LIVE = {
-  connected:false, device:null, rate:0, packets:0, rateT:0, lastMs:0,
+  connected:false, device:null, rate:0, packets:0, rateT:0, lastMs:0, armsMs:-1e9,
   areas: LIVE_AREAS.map(newArea),
+  body: {t:-1e9, mode:0, units:0, servo:[255,255,255,255,255,255], air:0, tof:255,
+         feel:[0,0,0,0,0], gesture:0, gcount:-1, airPat:3},
 };
 const liveOn = () => LIVE.connected && $("useLive").checked;
+// M5 の姿勢を映すか（からだの通知が 1.5 秒以内に届いていること）
+const mirrorOn = now => LIVE.connected && $("useMirror").checked && now - LIVE.body.t < 1500;
 const LOG = [];
 
 function onLivePacket(dv){
-  if(dv.byteLength < 18 || dv.getUint8(0) !== 1) return;
+  const type = dv.byteLength ? dv.getUint8(0) : 0;
   const now = performance.now();
-  LIVE.packets++; LIVE.lastMs = now;
-  LIVE.areas.forEach((a,k)=>{
-    const o = 2 + k*8, f = dv.getUint8(o);
+  if(type === 4 && dv.byteLength >= 20){ onBodyPacket(dv, now); return; }
+  if(dv.byteLength < 18 || (type !== 1 && type !== 3)) return;
+  if(type === 1) LIVE.packets++;
+  LIVE.lastMs = now;
+  const first = type === 1 ? 0 : 2;
+  if(type === 3) LIVE.armsMs = now;
+  [first, first+1].forEach((k,j)=>{
+    const a = LIVE.areas[k];
+    const o = 2 + j*8, f = dv.getUint8(o);
     a.has = !!(f&1); a.touching = !!(f&2); a.palm = !!(f&4);
     const p = dv.getUint8(o+1);
     a.pos = p===255 ? -1 : p/200;
@@ -352,6 +411,21 @@ function onLivePacket(dv){
     if(a.evCount >= 0 && cnt !== a.evCount && code) onLiveEvent(k, code, a, now);
     a.evCount = cnt;
   });
+}
+
+// からだ（モード・サーボ・空気圧・距離・きもち・ジェスチャ）
+function onBodyPacket(dv, now){
+  const b = LIVE.body;
+  b.t = now;
+  b.mode = dv.getUint8(2); b.units = dv.getUint8(3);
+  for(let i=0;i<6;i++) b.servo[i] = dv.getUint8(4+i);
+  b.air = dv.getUint8(10)/500;
+  b.tof = dv.getUint8(11);
+  for(let i=0;i<5;i++) b.feel[i] = dv.getUint8(12+i)/255;
+  const g = dv.getUint8(17), gc = dv.getUint8(18);
+  if(b.gcount >= 0 && gc !== b.gcount && g && mirrorOn(now)) showGesture(M5_GESTURES[g] || "");
+  b.gesture = g; b.gcount = gc;
+  b.airPat = dv.getUint8(19);
 }
 
 // 生データから「ぎゅっ」と「ポンポン」を判定する（50回/秒）
@@ -420,9 +494,13 @@ function reactPattern(k, i, now){
     if(i===DOWN)   reactStroke(+1, 1, now);      // 下へ＝順なで
     if(i===UP)     reactStroke(-1, 1, now);      // 上へ＝逆なで
     if(i===TAPTAP) reactStartle(now);
-  } else {                                       // お腹（仮の割り当て）
+  } else if(k===1){                              // お腹（仮の割り当て）
     if(i===DOWN || i===UP) reactBelly("rub", now);
     if(i===TAPTAP) reactBelly("pat", now);
+  } else {                                       // 腕（k=2 右腕 / 3 左腕）：なでると揺れ、ポンポンで上がる
+    const side = k===2 ? 0 : 1;
+    if(i===DOWN || i===UP) reactArm(side, "rub", now);
+    if(i===TAPTAP) reactArm(side, "pat", now);
   }
   // ぎゅっは step() の中でだっこにつなぐ
 }
@@ -466,6 +544,7 @@ function resetState(){
       ease:0.1,        // -1 けいかい / +1 あんしん
       spark:0.0,       // -1 ねむけ   / +1 わくわく
       hug:0, sway:0, shiver:0, startle:0, breath:0, raise:0, wave:0, wavePhase:0, bellyRub:0,
+      armRaise:[0,0], armWave:[0,0],
       lastTouch:performance.now(), taps:[], simTaps:[], simPrev:0, simPending:0,
       gestureLock:0, gesture:"", gestureUntil:0 };
   angles = ACT.map(a=>(a.min+a.max)/2);
@@ -504,6 +583,12 @@ function reactBelly(kind, now){
   if(kind==="pat"){ S.bellyRub=Math.max(S.bellyRub,0.5); S.ease=clamp(S.ease+0.15,-1,1);
                     S.found=clamp(S.found+0.1,-1,1); showGesture("ぽんぽん"); }
   S.gestureLock=now+400;
+}
+// 腕：side 0=右腕 1=左腕。なでるとその腕が上下に揺れ、ポンポンでその腕が上がる
+function reactArm(side, kind, now){
+  const nm = side===0 ? "右腕" : "左腕";
+  if(kind==="rub"){ S.armWave[side]=1; S.spark=clamp(S.spark+0.12,-1,1); showGesture(nm+" なでなで"); }
+  if(kind==="pat"){ S.armRaise[side]=1; S.spark=clamp(S.spark+0.08,-1,1); showGesture(nm+" ぽんぽん"); }
 }
 
 function step(dt, now){
@@ -645,6 +730,7 @@ function step(dt, now){
   else                         S.spark -= S.spark*dt*0.05;
 
   S.raise   *= (1-clamp(dt*P.raiseDecay,0,1));   // 上げた手が下りる速さ
+  for(let s=0;s<2;s++){ S.armRaise[s] *= (1-clamp(dt*P.raiseDecay,0,1)); S.armWave[s] *= (1-clamp(dt*P.waveDecay,0,1)); }
   S.wave    *= (1-clamp(dt*P.waveDecay,0,1));    // 交互の上下が収まる速さ
   S.wavePhase += dt*Math.PI*2*P.waveHz;          // 振る速さ
   S.sway    *= (1-clamp(dt*1.2,0,1));
@@ -674,9 +760,12 @@ function step(dt, now){
   const spine = 0.48 + S.spark*0.26 + found*0.16 - lonely*0.12 - S.hug*0.20
               + S.startle*0.32 + alertness*0.10 + breathSlow*0.05;
 
+  // 片腕だけの反応（腕エリアのなで・ポンポン）
+  const sideR = -S.armRaise[0]*P.raiseAmt - S.armWave[0]*P.waveAmp*Math.sin(S.wavePhase);
+  const sideL = -S.armRaise[1]*P.raiseAmt - S.armWave[1]*P.waveAmp*Math.sin(S.wavePhase+Math.PI);
   const cmd = [
-    armBase - swing + S.sway*0.06 + tremor,
-    armBase + swing - S.sway*0.06 + tremor,
+    armBase - swing + S.sway*0.06 + tremor + sideR,
+    armBase + swing - S.sway*0.06 + tremor + sideL,
     belly + tremor,
     spine + S.sway*0.10 + tremor,
   ].map(v=>clamp(v,0,1));
@@ -688,6 +777,26 @@ function step(dt, now){
 }
 
 const norm = i => clamp((angles[i]-ACT[i].min)/(ACT[i].max-ACT[i].min), 0, 1);
+
+// 絵に使う姿勢。腕は 0=真上 / 0.45=ふだん / 1=前で閉じる。お腹・背すじは 0〜1
+//  M5 を映すときは、M5 の開閉（0 開く〜1 閉じる）と上下（0 下げる〜1 上げる）から腕の向きを作る
+let lastPose = {aR:0.45, aL:0.45, bel:0.5, spi:0.5};
+function pose(now){
+  if(!mirrorOn(now)) return {aR:norm(R_ARM), aL:norm(L_ARM), bel:norm(BELLY), spi:norm(SPINE)};
+  const v = i => LIVE.body.servo[i] === 255 ? null : LIVE.body.servo[i]/250;
+  const arm = (iOpen, iLift, prev) => {
+    const c = v(iOpen), l = v(iLift);
+    if(c===null && l===null) return prev;
+    return clamp(0.45 + ((c ?? 0.1) - 0.1)*0.6 - ((l ?? 0.35) - 0.35)*0.9, 0, 1);
+  };
+  lastPose = {
+    aR: arm(0, 1, lastPose.aR),
+    aL: arm(2, 3, lastPose.aL),
+    bel: v(4) ?? lastPose.bel,
+    spi: v(5) ?? lastPose.spi,
+  };
+  return lastPose;
+}
 
 // --- 絵 -----------------------------------------------------------------
 const cv=$("stage"), ctx=cv.getContext("2d");
@@ -804,7 +913,7 @@ function draw(now){
   ctx.clearRect(0,0,w,h);
   ctx.fillStyle=cssVar("--stage"); ctx.fillRect(0,0,w,h);
 
-  const aR=norm(R_ARM), aL=norm(L_ARM), bel=norm(BELLY), spi=norm(SPINE);
+  const {aR, aL, bel, spi} = pose(now);
   const dSpine = spi - prevSpine; prevSpine = spi;      // 背すじが下がっているか
   const s=Math.min(w/420, h/330);
   const cx=w/2;
@@ -1021,7 +1130,38 @@ function renderPanels(){
   const dot=(id,v)=>{ $(id).style.left=((v+1)/2*100)+"%"; };
   dot("d_found",S.found); dot("d_ease",S.ease); dot("d_spark",S.spark);
   $("b_hug").style.width=(S.hug*100)+"%"; $("n_hug").textContent=S.hug.toFixed(2);
-  for(let i=0;i<4;i++){ $("b_a"+i).style.width=(norm(i)*100)+"%"; $("n_a"+i).textContent=Math.round(angles[i])+"°"; }
+  renderBody(performance.now());
+}
+
+// サーボ6軸と M5 の状態
+$("servoRows").innerHTML = M5ACT.map((a,i)=>
+  `<div class="out"><span>${a.name}</span><span class="bar"><i id="b_s${i}"${i>=4?' style="background:var(--ease)"':''}></i></span><span class="num" id="n_s${i}">—</span></div>`).join("");
+$("m5Modes").innerHTML = M5_MODES.map((m,i)=>`<span class="chip" id="mode${i}">${m}</span>`).join("");
+$("m5Units").innerHTML = ["8Servos","DAC2","ToF"].map((m,i)=>`<span class="chip" id="unit${i}">${m}</span>`).join("");
+function renderBody(now){
+  const mirror = mirrorOn(now), b = LIVE.body, fresh = LIVE.connected && now - b.t < 1500;
+  $("servoSrc").textContent = mirror ? "M5 実機の値" : (fresh ? "シミュレータの値（M5 を映す がオフ）" : "シミュレータの値");
+  // シミュレータは 開閉・お腹・背すじ の4軸（上下はない）
+  const SIM = [norm(R_ARM), null, norm(L_ARM), null, norm(BELLY), norm(SPINE)];
+  M5ACT.forEach((a,i)=>{
+    const n = mirror ? (b.servo[i]===255 ? null : b.servo[i]/250) : SIM[i];
+    $("b_s"+i).style.width = n===null ? "0%" : (n*100)+"%";
+    $("n_s"+i).textContent = n===null ? "—" : Math.round(a.min + n*(a.max-a.min))+"°";
+  });
+  M5_MODES.forEach((_,i)=>{ $("mode"+i).dataset.mode = fresh && b.mode===i ? "1" : "0"; });
+  [1,2,4].forEach((bit,i)=>{ $("unit"+i).dataset.on = fresh && (b.units&bit) ? "1" : "0"; });
+  $("b_air").style.width = fresh ? (b.air/0.30*100)+"%" : "0%";
+  $("n_air").textContent = fresh ? b.air.toFixed(3)+" MPa" : "—";
+  const tofOk = fresh && b.tof !== 255;
+  $("b_tof").style.width = tofOk ? (clamp(1 - b.tof/70, 0, 1)*100)+"%" : "0%";
+  $("n_tof").textContent = tofOk ? b.tof+" cm" : "—";
+  for(let i=0;i<5;i++){
+    $("b_m"+i).style.width = fresh ? (b.feel[i]*100)+"%" : "0%";
+    $("n_m"+i).textContent = fresh ? b.feel[i].toFixed(2) : "—";
+  }
+  $("m5Note").textContent = !LIVE.connected ? "M5 につなぐと、M5 のモード・サーボ・空気圧・きもちがここに出ます（M5CoreS3_YetiMain が必要）。"
+    : !fresh ? "M5 からからだの情報が届いていません（M5 が旧版のタッチ専用プログラムかもしれません）。"
+    : `エアの動き：${AIR_PATS[b.airPat] ?? "—"}${b.mode===2 ? "" : "（エアモード以外では 0）"}`;
 }
 
 // --- 背中・お腹のパネル -------------------------------------------------------
@@ -1046,7 +1186,9 @@ function renderLive(now){
     const box=$("area"+k), cv2=$("areaCv"+k), c=cv2.getContext("2d");
     box.dataset.has = shown && a.has ? "1" : "0";
     box.dataset.touch = shown && a.touching ? "1" : "0";
+    const noArms = k>=2 && now - LIVE.armsMs > 2000;   // 旧版の M5 は腕を送ってこない
     $("areaInfo"+k).textContent = !LIVE.connected ? (k===0 ? "キーボード（A〜G）" : "—")
+      : noArms ? "腕のデータが届いていない"
       : (a.has ? (a.touching ? (a.palm ? "手のひら" : "触れている") : "待機中") : "MPR121 が見つからない");
 
     PAT.forEach((p,i)=>{
