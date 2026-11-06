@@ -261,11 +261,11 @@ table.sys td.m{font-family:var(--mono)}
         <h2>システム構成（表）</h2>
         <table class="sys">
           <tr><th>端子</th><th>つなぐもの</th><th>アドレス</th></tr>
-          <tr><td>Port A<br><span class="m">G2 / G1</span></td><td>お腹 → 左腕（タッチ）</td><td class="m">0x5A / 0x5B</td></tr>
-          <tr><td>Port B<br><span class="m">G8 / G9</span></td><td>背中 → 右腕（タッチ）</td><td class="m">0x5A / 0x5B</td></tr>
+          <tr><td>Port A<br><span class="m">G2 / G1</span></td><td>お腹 → 左腕 → 背中 → 右腕（タッチ）</td><td class="m">0x5A / 0x5B / 0x5C / 0x5D</td></tr>
+          <tr><td>Port B<br><span class="m">G9</span></td><td>目の LED（8x8 WS2812B ×2、中央 4x4）</td><td class="m">—</td></tr>
           <tr><td>Port C<br><span class="m">G18 / G17</span></td><td>ハブ → 8Servos・ToF・DAC2（空気圧）</td><td class="m">0x25 / 0x29 / 0x59</td></tr>
         </table>
-        <p class="hint">タッチ基板は Grove の 5V → 3.3V LDO → MPR121。腕の基板は ADD を 3.3V に。
+        <p class="hint">タッチ基板は Grove の 5V → 3.3V LDO → MPR121。ADD のつなぎ先でアドレスが決まる（なし 0x5A / 3.3V 0x5B / SDA 0x5C / SCL 0x5D）。
           サーボ CH0 右腕開閉 / CH1 右腕上下 / CH2 左腕開閉 / CH3 左腕上下 / CH4 お腹 / CH5 背筋。</p>
       </div>
     </div>
@@ -337,9 +337,9 @@ const BLE_SERVICE = "6e5f0001-7965-7469-2d74-6f7563680000";
 const BLE_STATE   = "6e5f0002-7965-7469-2d74-6f7563680000";
 // M5 から届く順。port は配線（SYSTEM.md と同じ）
 const AREA_DEF = [
-  {name:"背中", port:"Port B · 0x5A"},
+  {name:"背中", port:"Port A · 0x5C"},
   {name:"お腹", port:"Port A · 0x5A"},
-  {name:"右腕", port:"Port B · 0x5B"},
+  {name:"右腕", port:"Port A · 0x5D"},
   {name:"左腕", port:"Port A · 0x5B"},
 ];
 const LIVE_AREAS = AREA_DEF.map(a=>a.name);
@@ -387,7 +387,7 @@ const LIVE = {
   connected:false, device:null, rate:0, packets:0, rateT:0, lastMs:0, armsMs:-1e9,
   areas: LIVE_AREAS.map(newArea),
   body: {t:-1e9, mode:0, units:0, servo:[255,255,255,255,255,255], air:0, tof:255,
-         feel:[0,0,0,0,0], gesture:0, gcount:-1, airPat:3},
+         feel:[0,0,0,0,0], gesture:0, gcount:-1, airPat:3, eyeLid:0, eyeExpr:0},
 };
 const liveOn = () => LIVE.connected && $("useLive").checked;
 // M5 の姿勢を映すか（からだの通知が 1.5 秒以内に届いていること）
@@ -431,7 +431,8 @@ function onBodyPacket(dv, now){
   const g = dv.getUint8(17), gc = dv.getUint8(18);
   if(b.gcount >= 0 && gc !== b.gcount && g && mirrorOn(now)) showGesture(M5_GESTURES[g] || "");
   b.gesture = g; b.gcount = gc;
-  b.airPat = dv.getUint8(19);
+  const v19 = dv.getUint8(19);
+  b.airPat = v19 & 3; b.eyeLid = (v19>>2) & 3; b.eyeExpr = v19 >> 4;
 }
 
 // 生データから「ぎゅっ」と「ポンポン」を判定する（50回/秒）
@@ -969,14 +970,22 @@ function draw(now){
   // 目：起きている＝真円 / 背すじが下がっている＝横棒
   const lonely = Math.max(0,-S.found);
   const closing = dSpine < -0.0004 || lonely > 0.45;   // 背すじが下がる間 or こどく
-  const eye=cssVar("--eye");
-  const eyeR=faceH*0.30*0.7;
+  // M5 を映すときは M5 の目の表情（0 ひらく 1 にっこり 2 びっくり 3 ねむい 4 けいかい 5 だっこ）
+  const mir = mirrorOn(now), ex5 = LIVE.body.eyeExpr;
+  const EYE_COL = ["", "", "#e6f5ff", "#4664dc", "#ff7828", "#ff6eaa"];
+  const eye = (mir && EYE_COL[ex5]) || cssVar("--eye");
+  const eyeR=faceH*0.30*0.7*(mir && ex5===2 ? 1.35 : 1);
+  const shut = mir ? (ex5===3 || LIVE.body.eyeLid>=2) : closing;
+  const happy = mir && ex5===1;
   ctx.save();
   ctx.shadowColor=eye; ctx.shadowBlur=9*s;
   [-1,1].forEach(sd=>{
     const ex=cx+sd*faceW*0.44, ey=faceY;
     ctx.strokeStyle=eye; ctx.fillStyle=eye;
-    if(closing){
+    if(happy){
+      ctx.beginPath(); ctx.arc(ex, ey+eyeR*0.6, eyeR*1.3, Math.PI*1.15, Math.PI*1.85);
+      ctx.lineWidth=eyeR*0.8; ctx.lineCap="round"; ctx.stroke();
+    } else if(shut){
       ctx.beginPath(); ctx.moveTo(ex-eyeR*1.5, ey); ctx.lineTo(ex+eyeR*1.5, ey);
       ctx.lineWidth=eyeR*0.9; ctx.lineCap="round"; ctx.stroke();
     } else {

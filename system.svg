@@ -19,7 +19,7 @@
 
   <rect width="1240" height="990" fill="#faf7f2"/>
   <text x="36" y="46" class="h">YETI ハード構成図</text>
-  <text x="36" y="70" class="s">正面図は YETI と向かい合って見た向き（図の左が YETI の右腕）。M5・ハブ・ToF・サーボの位置は仮。つなぎ方とアドレスは M5CoreS3_YetiMain と同じ。</text>
+  <text x="36" y="70" class="s">正面図は YETI と向かい合って見た向き（図の左が YETI の右腕）。M5・ハブ・ToF・サーボの位置は仮。つなぎ方とアドレスは M5CoreS3_YetiMain と同じ。タッチは Port A に お腹→左腕→背中→右腕 の数珠つなぎ。</text>
 
   <!-- ===================== 正面 ===================== -->
   <text x="430" y="120" text-anchor="middle" class="b">正面</text>
@@ -117,24 +117,32 @@
   <text x="430" y="719" text-anchor="middle" class="t">お腹 MPR121</text>
   <text x="430" y="737" text-anchor="middle" class="m">0x5A ＋LDO</text>
   <path class="el" d="M430 700 V680"/>
-  <path class="pa" d="M500 738 H812 V700"/>
+  <path class="pa" d="M500 738 H766 V700"/>
+  <path class="pa" d="M858 700 V776"/>
+  <rect x="742" y="776" width="160" height="30" rx="6" fill="#fdf0ea" stroke="#d1694a" stroke-width="2"/>
+  <text x="822" y="796" text-anchor="middle" class="t">→ 背中 MPR121（背面図）</text>
   <rect x="742" y="644" width="140" height="56" rx="6" fill="#fff" stroke="#d1694a" stroke-width="2"/>
   <text x="812" y="664" text-anchor="middle" class="t">左腕 MPR121</text>
   <text x="812" y="681" text-anchor="middle" class="m">0x5B ＋LDO</text>
   <text x="812" y="695" text-anchor="middle" class="s">ADD → 3.3V</text>
   <path class="el" d="M760 644 L712 590"/>
 
-  <!-- Port B：背中（背面図）→ 右腕 -->
-  <path class="pb" d="M331 397 H306 V218 H232"/>
-  <rect x="40" y="198" width="192" height="40" rx="6" fill="#eef4fc" stroke="#3b7dd8" stroke-width="2"/>
-  <text x="136" y="223" text-anchor="middle" class="t">→ 背中 MPR121（背面図）</text>
-  <rect x="40" y="682" width="192" height="30" rx="6" fill="#eef4fc" stroke="#3b7dd8" stroke-width="2"/>
+  <!-- Port B：目の LED（G9 → 右目 → 左目） -->
+  <rect x="381" y="282" width="42" height="42" rx="4" fill="none" stroke="#3b7dd8" stroke-width="2" stroke-dasharray="5 3"/>
+  <rect x="437" y="282" width="42" height="42" rx="4" fill="none" stroke="#3b7dd8" stroke-width="2" stroke-dasharray="5 3"/>
+  <path class="pb" d="M331 397 H306 V303 H381"/>
+  <path d="M423 303 H437" stroke="#3b7dd8" stroke-width="3" fill="none"/>
+  <rect x="40" y="190" width="262" height="58" rx="6" fill="#eef4fc" stroke="#3b7dd8" stroke-width="2"/>
+  <text x="171" y="212" text-anchor="middle" class="t">目 LED：8x8 WS2812B ×2</text>
+  <text x="171" y="232" text-anchor="middle" class="s">中央 4x4。G9 → 右目 → 左目</text>
+  <!-- Port A の続き：背中（背面図）→ 右腕 -->
+  <rect x="40" y="682" width="192" height="30" rx="6" fill="#fdf0ea" stroke="#d1694a" stroke-width="2"/>
   <text x="136" y="702" text-anchor="middle" class="t">背中 MPR121 から →</text>
-  <path class="pb" d="M136 712 V728"/>
-  <rect x="40" y="728" width="140" height="56" rx="6" fill="#fff" stroke="#3b7dd8" stroke-width="2" transform="translate(-4 0)"/>
+  <path class="pa" d="M136 712 V728"/>
+  <rect x="40" y="728" width="140" height="56" rx="6" fill="#fff" stroke="#d1694a" stroke-width="2" transform="translate(-4 0)"/>
   <text x="106" y="748" text-anchor="middle" class="t">右腕 MPR121</text>
-  <text x="106" y="765" text-anchor="middle" class="m">0x5B ＋LDO</text>
-  <text x="106" y="779" text-anchor="middle" class="s">ADD → 3.3V</text>
+  <text x="106" y="765" text-anchor="middle" class="m">0x5D ＋LDO</text>
+  <text x="106" y="779" text-anchor="middle" class="s">ADD → SCL</text>
   <path class="el" d="M166 728 L150 618"/>
 
   <!-- ===================== 背面 ===================== -->
@@ -164,16 +172,17 @@
   </g>
   <text x="1040" y="332" text-anchor="middle" class="s">背中の電極（上→下）</text>
 
-  <rect x="980" y="584" width="120" height="48" rx="6" fill="#fff" stroke="#3b7dd8" stroke-width="2"/>
-  <text x="1040" y="603" text-anchor="middle" class="t">背中 MPR121</text>
-  <text x="1040" y="621" text-anchor="middle" class="m">0x5A ＋LDO</text>
-  <path class="el" d="M1040 584 V556"/>
-  <!-- Port B から入って、右腕へ -->
-  <rect x="930" y="198" width="220" height="40" rx="6" fill="#eef4fc" stroke="#3b7dd8" stroke-width="2"/>
-  <text x="1040" y="223" text-anchor="middle" class="t">M5 の Port B から</text>
-  <path class="pb" d="M1124 238 V608 H1100"/>
-  <path class="pb" d="M1040 632 V690"/>
-  <rect x="955" y="690" width="170" height="30" rx="6" fill="#eef4fc" stroke="#3b7dd8" stroke-width="2"/>
+  <rect x="980" y="580" width="120" height="58" rx="6" fill="#fff" stroke="#d1694a" stroke-width="2"/>
+  <text x="1040" y="599" text-anchor="middle" class="t">背中 MPR121</text>
+  <text x="1040" y="616" text-anchor="middle" class="m">0x5C ＋LDO</text>
+  <text x="1040" y="631" text-anchor="middle" class="s">ADD → SDA</text>
+  <path class="el" d="M1040 580 V556"/>
+  <!-- 左腕（Port A の続き）から入って、右腕へ -->
+  <rect x="930" y="198" width="220" height="40" rx="6" fill="#fdf0ea" stroke="#d1694a" stroke-width="2"/>
+  <text x="1040" y="223" text-anchor="middle" class="t">左腕 MPR121 から（Port A）</text>
+  <path class="pa" d="M1124 238 V608 H1100"/>
+  <path class="pa" d="M1040 638 V690"/>
+  <rect x="955" y="690" width="170" height="30" rx="6" fill="#fdf0ea" stroke="#d1694a" stroke-width="2"/>
   <text x="1040" y="710" text-anchor="middle" class="t">→ 右腕 MPR121（正面図）</text>
   <!-- 背筋サーボ -->
   <rect x="1060" y="644" width="34" height="20" rx="4" class="sv" transform="translate(30 0)"/>
@@ -182,11 +191,11 @@
 
   <!-- ===================== 凡例 ===================== -->
   <line x1="40" y1="856" x2="1200" y2="856" stroke="#e2d9cc"/>
-  <path class="pa" d="M40 884 H80"/><text x="88" y="889" class="t">Port A（G2/G1）ソフトI2C</text>
-  <path class="pb" d="M300 884 H340"/><text x="348" y="889" class="t">Port B（G8/G9）ソフトI2C</text>
-  <path class="pc" d="M560 884 H600"/><text x="608" y="889" class="t">Port C（G18/G17）ハードI2C</text>
+  <path class="pa" d="M40 884 H80"/><text x="88" y="889" class="t">Port A（G2/G1）タッチ4枚</text>
+  <path class="pb" d="M300 884 H340"/><text x="348" y="889" class="t">Port B（G9）目の LED</text>
+  <path class="pc" d="M560 884 H600"/><text x="608" y="889" class="t">Port C（G18/G17）ハブ</text>
   <path class="el" d="M840 884 H880"/><text x="888" y="889" class="t">電極の線（MPR121 → 電極）</text>
   <rect x="40" y="908" width="30" height="18" rx="4" class="sv"/><text x="78" y="922" class="t">サーボ（数字＝8Servos の CH）</text>
   <text x="300" y="922" class="s">CH0 右腕開閉・CH1 右腕上下・CH2 左腕開閉・CH3 左腕上下・CH4 お腹・CH5 背筋。信号はすべて 8Servos から（線は省略）</text>
-  <text x="40" y="956" class="s">MPR121 は Grove の 5V → 3.3V LDO（AMS1117-3.3）で給電。サーボ電源：お腹・背筋は 8Servos の外部電源、腕は腕ユニットの電池（信号と GND だけ）。ITV は 24V 別電源。GND はすべて共通。</text>
+  <text x="40" y="956" class="s">MPR121 は Grove の 5V → 3.3V LDO（AMS1117-3.3）で給電。目の LED は 5V（明るさは上限付き）。サーボ電源：お腹・背筋は 8Servos の外部電源、腕は腕ユニットの電池（信号と GND だけ）。ITV は 24V 別電源。GND はすべて共通。</text>
 </svg>

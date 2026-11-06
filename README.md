@@ -75,6 +75,6 @@ M5Stack CoreS3 + ベース。配線の全体は `fablication_advanced/M5CoreS3_Y
 
 | 端子 | つなぐもの | アドレス |
 |---|---|---|
-| Port A（G2/G1） | お腹 → 左腕（MPR121） | 0x5A / 0x5B |
-| Port B（G8/G9） | 背中 → 右腕（MPR121） | 0x5A / 0x5B |
+| Port A（G2/G1） | お腹 → 左腕 → 背中 → 右腕（MPR121） | 0x5A / 0x5B / 0x5C / 0x5D |
+| Port B（G9） | 目の LED（8x8 WS2812B ×2、中央 4x4） | — |
 | Port C（G18/G17） | ハブ → 8Servos・ToF・DAC2 | 0x25 / 0x29 / 0x59 |
