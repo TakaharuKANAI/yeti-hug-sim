@@ -127,6 +127,19 @@ pre{font-family:var(--mono);font-size:11px;background:var(--bg);border:1px solid
 .stagecard{display:flex;flex-direction:column;min-height:0;background:var(--panel);border:1px solid var(--line);
   border-radius:16px;padding:12px}
 #stage{flex:1;min-height:0;width:100%;height:100%}
+.monitor{margin-top:14px}
+.monitor .mhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.monitor .mhead h2{margin:0}
+.monitor .mnote{font-size:12px;color:var(--muted)}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-top:12px;align-items:start}
+.mgrid h3{font-size:12px;color:var(--muted);font-weight:500;margin:0 0 8px;letter-spacing:.06em}
+.mbig{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;min-height:34px}
+.mbig b{font-size:24px;font-weight:700;color:var(--accent)}
+.mbig span{font-size:13px;color:var(--muted);font-family:var(--mono)}
+.chips + .chips{margin-top:6px}
+.mlog{max-height:150px;overflow:auto;margin-top:10px}
+#nadeScale{display:block;width:100%;height:78px}
+.cnt{font-family:var(--mono)}
 .below{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:14px;align-items:start}
 .below .card + .card{margin-top:0}
 .log{font-family:var(--mono);font-size:12px;line-height:1.75;color:var(--muted);margin:0;padding:0;list-style:none;
@@ -166,6 +179,30 @@ table.sys td.m{font-family:var(--mono)}
     <div class="leftcol" id="leftcol"></div>
     <div class="stagecard">
       <canvas id="stage" width="840" height="660" aria-label="生きもののうごき"></canvas>
+    </div>
+  </div>
+
+  <div class="card monitor">
+    <div class="mhead"><h2>ハグのモニター（M5 実機）</h2><span class="mnote" id="monNote">M5 につないで、M5 の画面を「ハグ」タブにすると動きます</span>
+      <button id="monClear" style="margin-left:auto">回数をクリア</button></div>
+    <div class="mgrid">
+      <div>
+        <h3>状態</h3>
+        <div class="mbig"><b id="monState">—</b><span id="monSec"></span></div>
+        <div class="chips" id="monFlow"></div>
+        <div class="chips" id="monFlags"></div>
+        <ul class="log mlog" id="monLog"><li>まだありません</li></ul>
+      </div>
+      <div>
+        <h3>なで（1回ごとの速さ。点は最近20回、大きい点が最新）</h3>
+        <div class="mbig"><b id="nadeLv">—</b><span id="nadeSp"></span></div>
+        <canvas id="nadeScale" width="600" height="156"></canvas>
+        <div class="chips" id="monCounts" style="margin-top:8px"></div>
+      </div>
+      <div>
+        <h3>動きとセンサー</h3>
+        <div id="monBars"></div>
+      </div>
     </div>
   </div>
 
@@ -227,11 +264,6 @@ table.sys td.m{font-family:var(--mono)}
         <div class="chips" id="m5Units"></div>
         <div class="out"><span>空気圧</span><span class="bar"><i id="b_air" style="background:var(--ease)"></i></span><span class="num" id="n_air">—</span></div>
         <div class="out"><span>距離</span><span class="bar"><i id="b_tof" style="background:var(--found)"></i></span><span class="num" id="n_tof">—</span></div>
-        <div class="chips" id="hugStates"></div>
-        <div class="chips" id="hugFlags"></div>
-        <div class="out"><span>押される</span><span class="bar"><i id="b_m0" style="background:var(--spark)"></i></span><span class="num" id="n_m0">—</span></div>
-        <div class="out"><span>落ち着き</span><span class="bar"><i id="b_m1" style="background:var(--ease)"></i></span><span class="num" id="n_m1">—</span></div>
-        <div class="out"><span>抱き返し</span><span class="bar"><i id="b_m2" style="background:var(--found)"></i></span><span class="num" id="n_m2">—</span></div>
         <p class="hint" id="m5Note">M5 につなぐと、M5 のモード・サーボ・空気圧・きもちがここに出ます（M5CoreS3_YetiMain が必要）。</p>
       </div>
     </div>
@@ -399,6 +431,7 @@ function onLivePacket(dv){
   const type = dv.byteLength ? dv.getUint8(0) : 0;
   const now = performance.now();
   if(type === 4 && dv.byteLength >= 20){ onBodyPacket(dv, now); return; }
+  if(type === 5 && dv.byteLength >= 20){ onMonPacket(dv, now); return; }
   if(dv.byteLength < 18 || (type !== 1 && type !== 3)) return;
   if(type === 1) LIVE.packets++;
   LIVE.lastMs = now;
@@ -1157,8 +1190,7 @@ $("servoRows").innerHTML = M5ACT.map((a,i)=>
   `<div class="out"><span>${a.name}</span><span class="bar"><i id="b_s${i}"${i>=4?' style="background:var(--ease)"':''}></i></span><span class="num" id="n_s${i}">—</span></div>`).join("");
 $("m5Modes").innerHTML = M5_MODES.map((m,i)=>`<span class="chip" id="mode${i}">${m}</span>`).join("");
 $("m5Units").innerHTML = ["8Servos","DAC2","ToF"].map((m,i)=>`<span class="chip" id="unit${i}">${m}</span>`).join("");
-$("hugStates").innerHTML = HUG_STATES.map((m,i)=>`<span class="chip" id="hug${i}">${m}</span>`).join("");
-$("hugFlags").innerHTML = ["着座","持ち上げ中"].map((m,i)=>`<span class="chip" id="hflag${i}">${m}</span>`).join("");
+
 function renderBody(now){
   const mirror = mirrorOn(now), b = LIVE.body, fresh = LIVE.connected && now - b.t < 1500;
   $("servoSrc").textContent = mirror ? "M5 実機の値" : (fresh ? "シミュレータの値（M5 を映す がオフ）" : "シミュレータの値");
@@ -1176,14 +1208,8 @@ function renderBody(now){
   const tofOk = fresh && b.tof !== 255;
   $("b_tof").style.width = tofOk ? (clamp(1 - b.tof/70, 0, 1)*100)+"%" : "0%";
   $("n_tof").textContent = tofOk ? b.tof+" cm" : "—";
-  const inHug = fresh && b.mode===1;
-  HUG_STATES.forEach((_,i)=>{ $("hug"+i).dataset.mode = inHug && b.hug.state===i ? "1" : "0"; });
-  [1,2].forEach((bit,i)=>{ $("hflag"+i).dataset.on = inHug && (b.hug.flags&bit) ? "1" : "0"; });
-  [b.hug.contact, b.hug.calm, b.hug.back].forEach((v,i)=>{
-    $("b_m"+i).style.width = inHug ? (v*100)+"%" : "0%";
-    $("n_m"+i).textContent = inHug ? v.toFixed(2) : "—";
-  });
-  $("m5Note").textContent = !LIVE.connected ? "M5 につなぐと、M5 のモード・サーボ・空気圧・ハグの状態がここに出ます（M5CoreS3_YetiMain が必要）。"
+
+  $("m5Note").textContent = !LIVE.connected ? "M5 につなぐと、M5 のモード・サーボ・空気圧がここに出ます。ハグの様子は上の「ハグのモニター」に出ます。"
     : !fresh ? "M5 からからだの情報が届いていません（M5 が旧版のタッチ専用プログラムかもしれません）。"
     : `エアの動き：${AIR_PATS[b.airPat] ?? "—"}${b.mode===2 ? "" : "（エアモード以外では 0）"}`;
 }
@@ -1311,6 +1337,117 @@ $("copy").addEventListener("click",async e=>{
   setTimeout(()=>b.textContent="スケッチ用の値をコピー",1600);
 });
 
+// --- ハグのモニター（M5 の通知 [5]） -------------------------------------------
+// 分かれ目はファームウェアの NADE_SLOW_MMS / NADE_FAST_MMS と同じ値にする
+const NADE = ["遅撫で","中撫で","早撫で"], NADE_TH = [250, 500], NADE_MAX = 1200;
+const MON_COUNT = ["遅撫で","中撫で","早撫で","ジタバタ","ぎゅっ"];
+const MON_BARS = [
+  ["fuwa","ふわふわ","--ease"], ["jita","ジタバタ","--accent"], ["gyu","ぎゅっ","--spark"],
+  ["contact","押される","--spark"], ["calm","落ち着き","--ease"], ["air","空気圧","--ease"],
+  ["tilt","傾き","--found"], ["shake","揺れ","--found"], ["tof","距離","--found"]];
+const MON = {t:-1e9, state:-1, sec:0, sc:-1, area:0, lv:-1, sp:0, fuwa:0, jita:0, gyu:0, contact:0, calm:0,
+             tilt:0, shake:0, tof:65535, air:0, flags:0, strokes:[], counts:[0,0,0,0,0], log:[],
+             jitaOn:false, gyuOn:false, logDirty:true, scaleDirty:true};
+function monLog(text){
+  MON.log.unshift(`${new Date().toTimeString().slice(0,8)}  ${text}`);
+  if(MON.log.length > 60) MON.log.pop();
+  MON.logDirty = true;
+}
+function onMonPacket(dv, now){
+  const u = i => dv.getUint8(i);
+  MON.t = now;
+  const st = u(2);
+  if(st !== MON.state){
+    if(MON.state >= 0) monLog(`<b>${HUG_STATES[MON.state] ?? "?"} → ${HUG_STATES[st] ?? "?"}</b>`);
+    MON.state = st;
+  }
+  MON.sec = u(3);
+  const sc = u(4);
+  MON.area = u(5);
+  const lv = u(6), sp = u(7) | (u(8) << 8);
+  if(sc !== MON.sc){
+    if(MON.sc >= 0){
+      MON.lv = lv; MON.sp = sp;
+      MON.strokes.push({sp, lv}); if(MON.strokes.length > 20) MON.strokes.shift();
+      MON.counts[lv]++;
+      monLog(`${AREA_DEF[MON.area]?.name ?? ""} ${NADE[lv]} ${sp} mm/秒`);
+      MON.scaleDirty = true;
+    }
+    MON.sc = sc;
+  }
+  MON.fuwa = u(9)/255; MON.jita = u(10)/255; MON.gyu = u(11)/255;
+  MON.contact = u(12)/255; MON.calm = u(13)/255;
+  MON.tilt = u(14); MON.shake = u(15)/500;
+  MON.tof = u(16) | (u(17) << 8);
+  MON.air = u(18)/500; MON.flags = u(19);
+  if(MON.jita > 0.5 && !MON.jitaOn){ MON.counts[3]++; monLog("背中ポンポン → ジタバタ"); }
+  MON.jitaOn = MON.jita > 0.05;
+  if(MON.gyu > 0.5 && !MON.gyuOn){ MON.counts[4]++; monLog("ぎゅっ → 抱き返し"); }
+  MON.gyuOn = MON.gyu > 0.05;
+}
+$("monFlow").innerHTML = HUG_STATES.map((m,i)=>`<span class="chip" id="mflow${i}">${m}</span>`).join("");
+$("monFlags").innerHTML = ["着座","持ち上げ中","ToF","加速度"].map((m,i)=>`<span class="chip" id="mflag${i}">${m}</span>`).join("");
+$("monBars").innerHTML = MON_BARS.map(([k,name,col])=>
+  `<div class="out"><span>${name}</span><span class="bar"><i id="mb_${k}" style="background:var(${col})"></i></span><span class="num" id="mn_${k}">—</span></div>`).join("");
+$("monClear").addEventListener("click", ()=>{
+  MON.counts = [0,0,0,0,0]; MON.strokes = []; MON.log = []; MON.logDirty = MON.scaleDirty = true;
+});
+function drawNadeScale(){
+  const cv = $("nadeScale"), c = cv.getContext("2d");
+  const W = cv.width, H = cv.height, padL = 8, padR = 8, y0 = 34, bh = 56;
+  const X = v => padL + clamp(v / NADE_MAX, 0, 1) * (W - padL - padR);
+  c.clearRect(0, 0, W, H);
+  const zones = [[0, NADE_TH[0]], [NADE_TH[0], NADE_TH[1]], [NADE_TH[1], NADE_MAX]];
+  const cols = [cssVar("--ease"), cssVar("--found"), cssVar("--accent")];
+  c.font = `500 20px "Zen Maru Gothic", sans-serif`; c.textAlign = "center"; c.textBaseline = "alphabetic";
+  zones.forEach(([a,b],i)=>{
+    c.globalAlpha = 0.18; c.fillStyle = cols[i]; c.fillRect(X(a), y0, X(b)-X(a), bh);
+    c.globalAlpha = 1; c.fillStyle = cols[i]; c.fillText(NADE[i], (X(a)+X(b))/2, y0 - 4);
+  });
+  c.strokeStyle = cssVar("--line"); c.lineWidth = 2;
+  NADE_TH.forEach(v=>{ c.beginPath(); c.moveTo(X(v), y0); c.lineTo(X(v), y0+bh); c.stroke(); });
+  c.fillStyle = cssVar("--muted"); c.font = `500 18px "Roboto Mono", monospace`; c.textBaseline = "top";
+  [0, NADE_TH[0], NADE_TH[1], NADE_MAX].forEach(v=>{
+    c.textAlign = v===0 ? "left" : v===NADE_MAX ? "right" : "center";
+    c.fillText(v===NADE_MAX ? `${v}+ mm/秒` : String(v), X(v), y0+bh+8);
+  });
+  const n = MON.strokes.length;
+  MON.strokes.forEach((s,i)=>{
+    const last = i === n-1;
+    c.globalAlpha = last ? 1 : 0.25 + 0.55*(i/n);
+    c.fillStyle = cols[s.lv];
+    c.beginPath(); c.arc(X(s.sp), y0 + bh/2 + (last ? 0 : ((i*37)%5 - 2)*6), last ? 11 : 6, 0, Math.PI*2); c.fill();
+    if(last){ c.strokeStyle = cssVar("--fg"); c.lineWidth = 2; c.stroke(); }
+  });
+  c.globalAlpha = 1;
+}
+function renderMon(now){
+  const fresh = LIVE.connected && now - MON.t < 1500;
+  const inHug = fresh && LIVE.body.mode === 1;
+  $("monNote").textContent = !LIVE.connected ? "M5 につないで、M5 の画面を「ハグ」タブにすると動きます"
+    : !fresh ? "M5 からモニターの情報が届いていません（M5 のファームウェアが古いかもしれません）"
+    : !inHug ? "M5 の画面を「ハグ」タブにしてください" : "受信中";
+  $("monState").textContent = inHug ? (HUG_STATES[MON.state] ?? "—") : "—";
+  $("monSec").textContent = inHug ? `${MON.sec >= 255 ? "255+" : MON.sec} 秒` : "";
+  HUG_STATES.forEach((_,i)=>{ $("mflow"+i).dataset.mode = inHug && MON.state===i ? "1" : "0"; });
+  [1,2,8,4].forEach((bit,i)=>{ $("mflag"+i).dataset.on = fresh && (MON.flags&bit) ? "1" : "0"; });
+  $("nadeLv").textContent = MON.lv >= 0 ? NADE[MON.lv] : "—";
+  $("nadeSp").textContent = MON.lv >= 0 ? `${MON.sp} mm/秒` : "";
+  $("monCounts").innerHTML = MON_COUNT.map((m,i)=>`<span class="chip">${m} <span class="cnt">${MON.counts[i]}</span></span>`).join("");
+  const val = {fuwa:[MON.fuwa, MON.fuwa.toFixed(2)], jita:[MON.jita, MON.jita.toFixed(2)], gyu:[MON.gyu, MON.gyu.toFixed(2)],
+    contact:[MON.contact, MON.contact.toFixed(2)], calm:[MON.calm, MON.calm.toFixed(2)],
+    air:[MON.air/0.30, MON.air.toFixed(3)], tilt:[MON.tilt/90, MON.tilt+"°"], shake:[MON.shake/0.3, MON.shake.toFixed(2)+"G"],
+    tof:[MON.tof===65535 ? 0 : clamp(1 - MON.tof/1000, 0, 1), MON.tof===65535 ? "なし" : Math.round(MON.tof/10)+"cm"]};
+  MON_BARS.forEach(([k])=>{
+    const [f, t] = val[k];
+    $("mb_"+k).style.width = fresh ? (clamp(f,0,1)*100)+"%" : "0%";
+    $("mn_"+k).textContent = fresh ? t : "—";
+  });
+  if(MON.logDirty){ $("monLog").innerHTML = MON.log.length ? MON.log.map(l=>`<li>${l}</li>`).join("") : "<li>まだありません</li>"; MON.logDirty = false; }
+  if(MON.scaleDirty){ drawNadeScale(); MON.scaleDirty = false; }
+}
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", ()=>{ MON.scaleDirty = true; });
+
 let last=performance.now();
 function loop(now){
   let dt=(now-last)/1000; last=now;
@@ -1319,6 +1456,7 @@ function loop(now){
   draw(now);
   renderPanels();
   renderLive(now);
+  renderMon(now);
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
