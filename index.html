@@ -1342,11 +1342,11 @@ $("copy").addEventListener("click",async e=>{
 const NADE = ["遅撫で","中撫で","早撫で"], NADE_TH = [250, 500], NADE_MAX = 1200;
 const MON_COUNT = ["遅撫で","中撫で","早撫で","ジタバタ","ぎゅっ"];
 const MON_BARS = [
-  ["fuwa","ふわふわ","--ease"], ["jita","ジタバタ","--accent"], ["gyu","ぎゅっ","--spark"],
+  ["pon","ポンポン","--found"], ["fuwa","ふわふわ","--ease"], ["jita","ジタバタ","--accent"], ["gyu","ぎゅっ","--spark"],
   ["contact","押される","--spark"], ["calm","落ち着き","--ease"], ["air","空気圧","--ease"],
-  ["tilt","傾き","--found"], ["shake","揺れ","--found"], ["tof","距離","--found"]];
+  ["tilt","傾き","--found"], ["tof","距離","--found"]];
 const MON = {t:-1e9, state:-1, sec:0, sc:-1, area:0, lv:-1, sp:0, fuwa:0, jita:0, gyu:0, contact:0, calm:0,
-             tilt:0, shake:0, tof:65535, air:0, flags:0, strokes:[], counts:[0,0,0,0,0], log:[],
+             tilt:0, pon:0, tof:65535, air:0, flags:0, strokes:[], counts:[0,0,0,0,0], log:[],
              jitaOn:false, gyuOn:false, logDirty:true, scaleDirty:true};
 function monLog(text){
   MON.log.unshift(`${new Date().toTimeString().slice(0,8)}  ${text}`);
@@ -1377,10 +1377,10 @@ function onMonPacket(dv, now){
   }
   MON.fuwa = u(9)/255; MON.jita = u(10)/255; MON.gyu = u(11)/255;
   MON.contact = u(12)/255; MON.calm = u(13)/255;
-  MON.tilt = u(14); MON.shake = u(15)/500;
+  MON.tilt = u(14); MON.pon = u(15)/255;
   MON.tof = u(16) | (u(17) << 8);
   MON.air = u(18)/500; MON.flags = u(19);
-  if(MON.jita > 0.5 && !MON.jitaOn){ MON.counts[3]++; monLog("背中ポンポン → ジタバタ"); }
+  if(MON.jita > 0.5 && !MON.jitaOn){ MON.counts[3]++; monLog("ポンポンゲージ満タン → ジタバタ"); }
   MON.jitaOn = MON.jita > 0.05;
   if(MON.gyu > 0.5 && !MON.gyuOn){ MON.counts[4]++; monLog("ぎゅっ → 抱き返し"); }
   MON.gyuOn = MON.gyu > 0.05;
@@ -1436,7 +1436,7 @@ function renderMon(now){
   $("monCounts").innerHTML = MON_COUNT.map((m,i)=>`<span class="chip">${m} <span class="cnt">${MON.counts[i]}</span></span>`).join("");
   const val = {fuwa:[MON.fuwa, MON.fuwa.toFixed(2)], jita:[MON.jita, MON.jita.toFixed(2)], gyu:[MON.gyu, MON.gyu.toFixed(2)],
     contact:[MON.contact, MON.contact.toFixed(2)], calm:[MON.calm, MON.calm.toFixed(2)],
-    air:[MON.air/0.30, MON.air.toFixed(3)], tilt:[MON.tilt/90, MON.tilt+"°"], shake:[MON.shake/0.3, MON.shake.toFixed(2)+"G"],
+    air:[MON.air/0.30, MON.air.toFixed(3)], tilt:[MON.tilt/90, MON.tilt+"°"], pon:[MON.pon, Math.round(MON.pon*5*10)/10+" / 5秒"],
     tof:[MON.tof===65535 ? 0 : clamp(1 - MON.tof/1000, 0, 1), MON.tof===65535 ? "なし" : Math.round(MON.tof/10)+"cm"]};
   MON_BARS.forEach(([k])=>{
     const [f, t] = val[k];
