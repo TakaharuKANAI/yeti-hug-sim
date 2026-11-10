@@ -227,11 +227,11 @@ table.sys td.m{font-family:var(--mono)}
         <div class="chips" id="m5Units"></div>
         <div class="out"><span>空気圧</span><span class="bar"><i id="b_air" style="background:var(--ease)"></i></span><span class="num" id="n_air">—</span></div>
         <div class="out"><span>距離</span><span class="bar"><i id="b_tof" style="background:var(--found)"></i></span><span class="num" id="n_tof">—</span></div>
-        <div class="out"><span>きぶん</span><span class="bar"><i id="b_m0" style="background:var(--found)"></i></span><span class="num" id="n_m0">—</span></div>
-        <div class="out"><span>あんしん</span><span class="bar"><i id="b_m1" style="background:var(--ease)"></i></span><span class="num" id="n_m1">—</span></div>
-        <div class="out"><span>けいかい</span><span class="bar"><i id="b_m2"></i></span><span class="num" id="n_m2">—</span></div>
-        <div class="out"><span>ねむけ</span><span class="bar"><i id="b_m3" style="background:var(--muted)"></i></span><span class="num" id="n_m3">—</span></div>
-        <div class="out"><span>だっこ</span><span class="bar"><i id="b_m4" style="background:var(--spark)"></i></span><span class="num" id="n_m4">—</span></div>
+        <div class="chips" id="hugStates"></div>
+        <div class="chips" id="hugFlags"></div>
+        <div class="out"><span>押される</span><span class="bar"><i id="b_m0" style="background:var(--spark)"></i></span><span class="num" id="n_m0">—</span></div>
+        <div class="out"><span>落ち着き</span><span class="bar"><i id="b_m1" style="background:var(--ease)"></i></span><span class="num" id="n_m1">—</span></div>
+        <div class="out"><span>抱き返し</span><span class="bar"><i id="b_m2" style="background:var(--found)"></i></span><span class="num" id="n_m2">—</span></div>
         <p class="hint" id="m5Note">M5 につなぐと、M5 のモード・サーボ・空気圧・きもちがここに出ます（M5CoreS3_YetiMain が必要）。</p>
       </div>
     </div>
@@ -361,9 +361,10 @@ const M5ACT = [
   {name:"おなか",   min:0,   max:40},
   {name:"背すじ",   min:0,   max:40},
 ];
-const M5_MODES = ["ロボット","いきもの","エア","タッチ"];
-const M5_GESTURES = ["","はっけん","なでられた","さかなで…","びっくり","ぎゅっ",
-  "おなか なでなで","ぽんぽん","右腕 なでなで","左腕 なでなで","右腕 ぽんぽん","左腕 ぽんぽん"];
+const M5_MODES = ["ロボット","ハグ","エア","タッチ"];
+const HUG_STATES = ["待機","起床","だっこ判定","ハグ安定","入眠","終了"];
+// M5 のハグモードのジェスチャ番号（ファームウェアの GESTURE_NAME と同じ順）
+const M5_GESTURES = ["","おはよう","だっこ","なでなで","ぎゅっ","おやすみ","またね","もちあげ"];
 const AIR_PATS = ["ギュッ","ふわふわ","エキサイト","マニュアル"];
 const TRAIL_N = 50;
 // 検知パターン（背中・お腹とも同じ4つ）
@@ -387,7 +388,7 @@ const LIVE = {
   connected:false, device:null, rate:0, packets:0, rateT:0, lastMs:0, armsMs:-1e9,
   areas: LIVE_AREAS.map(newArea),
   body: {t:-1e9, mode:0, units:0, servo:[255,255,255,255,255,255], air:0, tof:255,
-         feel:[0,0,0,0,0], gesture:0, gcount:-1, airPat:3, eyeLid:0, eyeExpr:0},
+         hug:{state:0, calm:0, contact:0, flags:0, back:0}, gesture:0, gcount:-1, airPat:3, eyeLid:0, eyeExpr:0},
 };
 const liveOn = () => LIVE.connected && $("useLive").checked;
 // M5 の姿勢を映すか（からだの通知が 1.5 秒以内に届いていること）
@@ -427,7 +428,8 @@ function onBodyPacket(dv, now){
   for(let i=0;i<6;i++) b.servo[i] = dv.getUint8(4+i);
   b.air = dv.getUint8(10)/500;
   b.tof = dv.getUint8(11);
-  for(let i=0;i<5;i++) b.feel[i] = dv.getUint8(12+i)/255;
+  b.hug = {state:dv.getUint8(12), calm:dv.getUint8(13)/255, contact:dv.getUint8(14)/255,
+           flags:dv.getUint8(15), back:dv.getUint8(16)/255};
   const g = dv.getUint8(17), gc = dv.getUint8(18);
   if(b.gcount >= 0 && gc !== b.gcount && g && mirrorOn(now)) showGesture(M5_GESTURES[g] || "");
   b.gesture = g; b.gcount = gc;
@@ -970,13 +972,13 @@ function draw(now){
   // 目：起きている＝真円 / 背すじが下がっている＝横棒
   const lonely = Math.max(0,-S.found);
   const closing = dSpine < -0.0004 || lonely > 0.45;   // 背すじが下がる間 or こどく
-  // M5 を映すときは M5 の目の表情（0 ひらく 1 にっこり 2 びっくり 3 ねむい 4 けいかい 5 だっこ）
+  // M5 を映すときは M5 の目の表情（0 ひらく 1 にっこり 2 びっくり 3 ほそい線 4 けいかい 5 だっこ 6 半分）
   const mir = mirrorOn(now), ex5 = LIVE.body.eyeExpr;
-  const EYE_COL = ["", "", "#e6f5ff", "#4664dc", "#ff7828", "#ff6eaa"];
+  const EYE_COL = ["", "", "#e6f5ff", "", "#ff7828", "#ff6eaa", ""];
   const eye = (mir && EYE_COL[ex5]) || cssVar("--eye");
   const eyeR=faceH*0.30*0.7*(mir && ex5===2 ? 1.35 : 1);
   const shut = mir ? (ex5===3 || LIVE.body.eyeLid>=2) : closing;
-  const happy = mir && ex5===1;
+  const happy = mir && ex5===1, half = mir && ex5===6;
   ctx.save();
   ctx.shadowColor=eye; ctx.shadowBlur=9*s;
   [-1,1].forEach(sd=>{
@@ -985,6 +987,8 @@ function draw(now){
     if(happy){
       ctx.beginPath(); ctx.arc(ex, ey+eyeR*0.6, eyeR*1.3, Math.PI*1.15, Math.PI*1.85);
       ctx.lineWidth=eyeR*0.8; ctx.lineCap="round"; ctx.stroke();
+    } else if(half){
+      ctx.beginPath(); ctx.ellipse(ex, ey+eyeR*0.15, eyeR*1.1, eyeR*0.55, 0, 0, Math.PI*2); ctx.fill();
     } else if(shut){
       ctx.beginPath(); ctx.moveTo(ex-eyeR*1.5, ey); ctx.lineTo(ex+eyeR*1.5, ey);
       ctx.lineWidth=eyeR*0.9; ctx.lineCap="round"; ctx.stroke();
@@ -1153,6 +1157,8 @@ $("servoRows").innerHTML = M5ACT.map((a,i)=>
   `<div class="out"><span>${a.name}</span><span class="bar"><i id="b_s${i}"${i>=4?' style="background:var(--ease)"':''}></i></span><span class="num" id="n_s${i}">—</span></div>`).join("");
 $("m5Modes").innerHTML = M5_MODES.map((m,i)=>`<span class="chip" id="mode${i}">${m}</span>`).join("");
 $("m5Units").innerHTML = ["8Servos","DAC2","ToF"].map((m,i)=>`<span class="chip" id="unit${i}">${m}</span>`).join("");
+$("hugStates").innerHTML = HUG_STATES.map((m,i)=>`<span class="chip" id="hug${i}">${m}</span>`).join("");
+$("hugFlags").innerHTML = ["着座","持ち上げ中"].map((m,i)=>`<span class="chip" id="hflag${i}">${m}</span>`).join("");
 function renderBody(now){
   const mirror = mirrorOn(now), b = LIVE.body, fresh = LIVE.connected && now - b.t < 1500;
   $("servoSrc").textContent = mirror ? "M5 実機の値" : (fresh ? "シミュレータの値（M5 を映す がオフ）" : "シミュレータの値");
@@ -1170,11 +1176,14 @@ function renderBody(now){
   const tofOk = fresh && b.tof !== 255;
   $("b_tof").style.width = tofOk ? (clamp(1 - b.tof/70, 0, 1)*100)+"%" : "0%";
   $("n_tof").textContent = tofOk ? b.tof+" cm" : "—";
-  for(let i=0;i<5;i++){
-    $("b_m"+i).style.width = fresh ? (b.feel[i]*100)+"%" : "0%";
-    $("n_m"+i).textContent = fresh ? b.feel[i].toFixed(2) : "—";
-  }
-  $("m5Note").textContent = !LIVE.connected ? "M5 につなぐと、M5 のモード・サーボ・空気圧・きもちがここに出ます（M5CoreS3_YetiMain が必要）。"
+  const inHug = fresh && b.mode===1;
+  HUG_STATES.forEach((_,i)=>{ $("hug"+i).dataset.mode = inHug && b.hug.state===i ? "1" : "0"; });
+  [1,2].forEach((bit,i)=>{ $("hflag"+i).dataset.on = inHug && (b.hug.flags&bit) ? "1" : "0"; });
+  [b.hug.contact, b.hug.calm, b.hug.back].forEach((v,i)=>{
+    $("b_m"+i).style.width = inHug ? (v*100)+"%" : "0%";
+    $("n_m"+i).textContent = inHug ? v.toFixed(2) : "—";
+  });
+  $("m5Note").textContent = !LIVE.connected ? "M5 につなぐと、M5 のモード・サーボ・空気圧・ハグの状態がここに出ます（M5CoreS3_YetiMain が必要）。"
     : !fresh ? "M5 からからだの情報が届いていません（M5 が旧版のタッチ専用プログラムかもしれません）。"
     : `エアの動き：${AIR_PATS[b.airPat] ?? "—"}${b.mode===2 ? "" : "（エアモード以外では 0）"}`;
 }
